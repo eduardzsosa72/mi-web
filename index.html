@@ -1,0 +1,1982 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GOKU-CHECKER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Rubik:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css">
+    <style>
+        :root {
+            --primary: #4299e1;
+            --primary-dark: #3182ce;
+            --primary-light: #63b3ed;
+            --primary-lighter: #ebf8ff;
+            --secondary: #06D6A0;
+            --success: #38a169;
+            --success-dark: #2f855a;
+            --success-light: #9ae6b4;
+            --warning: #ed8936;
+            --warning-dark: #dd6b20;
+            --warning-light: #fed7d7;
+            --error: #e53e3e;
+            --error-dark: #c53030;
+            --error-light: #fed7d7;
+            --info: #4299e1;
+            --info-dark: #3182ce;
+            --info-light: #bee3f8;
+            --dark: #1a202c;
+            --darker: #111827;
+            --light: #f7fafc;
+            --gray: #718096;
+            --gray-light: #e2e8f0;
+            --card-bg: rgba(26, 32, 44, 0.9);
+            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(66, 153, 225, 0.5); }
+            50% { box-shadow: 0 0 25px rgba(66, 153, 225, 0.8); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Rubik', 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #141e30 0%, #243b55 100%);
+            color: var(--light);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        /* Header Styles */
+        .app-header {
+            background: rgba(26, 32, 44, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--card-shadow);
+            border: 2px solid var(--primary);
+            animation: glow 3s infinite alternate, fadeIn 0.8s ease-out;
+        }
+
+        .app-logo {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .app-logo-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 20px rgba(66, 153, 225, 0.4);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .app-logo-icon i {
+            font-size: 1.8rem;
+            color: white;
+        }
+
+        .app-title h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.25rem;
+            text-shadow: 0 0 20px rgba(66, 153, 225, 0.5);
+        }
+
+        .app-title p {
+            color: var(--primary-light);
+            font-size: 1rem;
+        }
+
+        /* Header Actions */
+        .header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-credits {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 5px 20px rgba(66, 153, 225, 0.3);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .user-credits:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(66, 153, 225, 0.5);
+        }
+
+        .user-credits.no-session {
+            background: linear-gradient(135deg, var(--error), var(--error-dark));
+        }
+
+        .user-credits.no-session:hover {
+            background: linear-gradient(135deg, var(--error-dark), var(--error));
+        }
+
+        /* Session Buttons - CORREGIDOS */
+        .session-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: rgba(66, 153, 225, 0.2);
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            color: var(--primary-light);
+            border: 1px solid rgba(66, 153, 225, 0.3);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .btn-header {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            text-decoration: none;
+        }
+
+        .btn-header-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 5px 20px rgba(66, 153, 225, 0.3);
+        }
+
+        .btn-header-primary:hover {
+            box-shadow: 0 10px 25px rgba(66, 153, 225, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .btn-header-success {
+            background: linear-gradient(135deg, var(--success), var(--success-dark));
+            color: white;
+            box-shadow: 0 5px 20px rgba(56, 161, 105, 0.3);
+        }
+
+        .btn-header-success:hover {
+            box-shadow: 0 10px 25px rgba(56, 161, 105, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .btn-header-danger {
+            background: linear-gradient(135deg, var(--error), var(--error-dark));
+            color: white;
+            box-shadow: 0 5px 20px rgba(229, 62, 62, 0.3);
+        }
+
+        .btn-header-danger:hover {
+            box-shadow: 0 10px 25px rgba(229, 62, 62, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .btn-header-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--light);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-header-secondary:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            box-shadow: 0 6px 20px rgba(66, 153, 225, 0.3);
+        }
+
+        /* Control Buttons */
+        .control-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            min-width: 180px;
+        }
+
+        .control-btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 8px 20px rgba(66, 153, 225, 0.4);
+        }
+
+        .control-btn-primary:hover {
+            box-shadow: 0 12px 30px rgba(66, 153, 225, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .control-btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--light);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .control-btn-secondary:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            box-shadow: 0 6px 20px rgba(66, 153, 225, 0.3);
+        }
+
+        .control-btn-success {
+            background: linear-gradient(135deg, var(--success), var(--success-dark));
+            color: white;
+            box-shadow: 0 8px 20px rgba(56, 161, 105, 0.4);
+        }
+
+        .control-btn-success:hover {
+            box-shadow: 0 12px 30px rgba(56, 161, 105, 0.6);
+        }
+
+        .control-btn-danger {
+            background: linear-gradient(135deg, var(--error), var(--error-dark));
+            color: white;
+            box-shadow: 0 8px 20px rgba(229, 62, 62, 0.4);
+        }
+
+        .control-btn-danger:hover {
+            box-shadow: 0 12px 30px rgba(229, 62, 62, 0.6);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        /* Stats Section */
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            border: 2px solid var(--primary);
+            animation: fadeIn 0.8s ease-out;
+            text-align: center;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            border-color: var(--primary-light);
+        }
+
+        .stat-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 1.5rem;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-card.approved .stat-icon {
+            background: rgba(56, 161, 105, 0.2);
+            color: var(--success);
+            box-shadow: 0 5px 15px rgba(56, 161, 105, 0.3);
+        }
+
+        .stat-card.rejected .stat-icon {
+            background: rgba(229, 62, 62, 0.2);
+            color: var(--error);
+            box-shadow: 0 5px 15px rgba(229, 62, 62, 0.3);
+        }
+
+        .stat-card.errors .stat-icon {
+            background: rgba(237, 137, 54, 0.2);
+            color: var(--warning);
+            box-shadow: 0 5px 15px rgba(237, 137, 54, 0.3);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card.approved .stat-value {
+            color: var(--success);
+            text-shadow: 0 0 15px rgba(56, 161, 105, 0.5);
+        }
+
+        .stat-card.rejected .stat-value {
+            color: var(--error);
+            text-shadow: 0 0 15px rgba(229, 62, 62, 0.5);
+        }
+
+        .stat-card.errors .stat-value {
+            color: var(--warning);
+            text-shadow: 0 0 15px rgba(237, 137, 54, 0.5);
+        }
+
+        .stat-label {
+            color: var(--primary-light);
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        /* Progress Section */
+        .progress-section {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--card-shadow);
+            border: 2px solid var(--primary);
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .progress-label {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary-light);
+        }
+
+        .progress-percentage {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-shadow: 0 0 10px rgba(66, 153, 225, 0.5);
+        }
+
+        .progress-bar-container {
+            height: 15px;
+            background: rgba(66, 153, 225, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(66, 153, 225, 0.3);
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+            width: 0%;
+            transition: width 0.8s ease;
+            border-radius: 10px;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Card Styles */
+        .card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+            border: 2px solid var(--primary);
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+            border-color: var(--primary-light);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            gap: 1rem;
+        }
+
+        .card-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(66, 153, 225, 0.2);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 1.5rem;
+            border: 2px solid rgba(66, 153, 225, 0.3);
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary-light);
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--primary-light);
+            font-size: 1rem;
+        }
+
+        textarea, input, select {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(66, 153, 225, 0.3);
+            border-radius: 12px;
+            color: var(--light);
+            padding: 1rem;
+            font-size: 1rem;
+            transition: var(--transition);
+            font-family: 'Inter', sans-serif;
+        }
+
+        textarea {
+            height: 150px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        textarea:focus, input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        textarea::placeholder, input::placeholder, select::placeholder {
+            color: var(--gray);
+        }
+
+        /* Tabs */
+        .tabs-container {
+            background: var(--card-bg);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 2rem;
+            border: 2px solid var(--primary);
+        }
+
+        .tabs-header {
+            display: flex;
+            background: rgba(66, 153, 225, 0.1);
+            border-bottom: 1px solid rgba(66, 153, 225, 0.3);
+        }
+
+        .tab {
+            padding: 1rem 2rem;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--gray);
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab:hover {
+            color: var(--primary);
+            background: rgba(66, 153, 225, 0.1);
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            background: rgba(66, 153, 225, 0.15);
+        }
+
+        .tab i {
+            font-size: 1.2rem;
+        }
+
+        .badge {
+            background: var(--primary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 2rem;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 2px solid rgba(66, 153, 225, 0.3);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: transparent;
+        }
+
+        .results-table th {
+            text-align: left;
+            padding: 1rem;
+            background: rgba(66, 153, 225, 0.2);
+            color: var(--primary-light);
+            font-weight: 700;
+            font-size: 0.9rem;
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .results-table td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(66, 153, 225, 0.2);
+            color: var(--light);
+            font-size: 0.9rem;
+        }
+
+        .results-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .results-table tr:hover td {
+            background: rgba(66, 153, 225, 0.1);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 2px solid transparent;
+            font-size: 0.9rem;
+            background: rgba(66, 153, 225, 0.2);
+            color: var(--primary);
+        }
+
+        .action-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .copy-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .delete-btn:hover {
+            background: var(--error);
+            color: white;
+            border-color: var(--error);
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--gray);
+            font-style: italic;
+            font-size: 1rem;
+        }
+
+        /* Menu Button - NUEVO */
+        .menu-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--warning), var(--warning-dark));
+            color: white;
+            box-shadow: 0 5px 20px rgba(237, 137, 54, 0.3);
+        }
+
+        .menu-button:hover {
+            box-shadow: 0 10px 25px rgba(237, 137, 54, 0.5);
+            transform: translateY(-2px);
+        }
+
+        /* Footer */
+        .app-footer {
+            text-align: center;
+            padding-top: 2rem;
+            color: var(--primary-light);
+            font-size: 0.9rem;
+        }
+
+        .heart-icon {
+            color: var(--error);
+            display: inline-block;
+            animation: pulse 1.5s infinite;
+            margin: 0 0.5rem;
+        }
+
+        .app-footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+            border-bottom: 2px solid transparent;
+        }
+
+        .app-footer a:hover {
+            border-bottom-color: var(--primary);
+            color: var(--primary-light);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .app-container {
+                padding: 1rem;
+            }
+
+            .app-header {
+                padding: 1.5rem;
+            }
+
+            .header-actions {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .user-section {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .session-buttons {
+                width: 100%;
+                flex-direction: column;
+            }
+
+            .btn-header, .menu-button {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .stats-section {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+
+            .card-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+            }
+
+            .control-buttons {
+                flex-direction: column;
+            }
+
+            .control-btn {
+                width: 100%;
+            }
+
+            .tabs-header {
+                flex-direction: column;
+            }
+
+            .tab {
+                justify-content: center;
+            }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+            border-radius: 4px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="app-logo">
+                <div class="app-logo-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="app-title">
+                    <h1>GOKU-CHECKER</h1>
+                    <p>Sistema Avanzado de Verificación de Tarjetas</p>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="user-section">
+                    <div class="user-credits" id="userCreditsDisplay">
+                        <i class="fas fa-coins"></i>
+                        <span id="creditsCount">0</span> créditos
+                    </div>
+                    
+                    <!-- Menu Button - NUEVO -->
+                    <a href="dashboard_page.php" class="menu-button">
+                        <i class="fas fa-bars"></i>
+                        <span>Menú</span>
+                    </a>
+                </div>
+                
+                <!-- Session Buttons - CORREGIDOS -->
+                <div class="session-buttons" id="sessionButtons">
+                    <div class="user-info" id="userInfo">
+                        <div class="user-avatar" id="userAvatar">U</div>
+                        <span id="userName">Usuario</span>
+                    </div>
+                    <button id="creditsBtn" class="btn-header btn-header-success">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Recargar</span>
+                    </button>
+                    <button id="logoutBtn" class="btn-header btn-header-danger">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Cerrar</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Stats Section -->
+        <div class="stats-section">
+            <div class="stat-card approved">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-value" id="approvedCount">0</div>
+                <div class="stat-label">Aprobadas</div>
+            </div>
+            <div class="stat-card rejected">
+                <div class="stat-icon">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+                <div class="stat-value" id="rejectedCount">0</div>
+                <div class="stat-label">Rechazadas</div>
+            </div>
+            <div class="stat-card errors">
+                <div class="stat-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="stat-value" id="errorCount">0</div>
+                <div class="stat-label">Errores</div>
+            </div>
+        </div>
+
+        <!-- Progress Section -->
+        <div class="progress-section">
+            <div class="progress-header">
+                <div class="progress-label">Progreso de Verificación</div>
+                <div id="progressPercentage" class="progress-percentage">0%</div>
+            </div>
+            <div class="progress-bar-container">
+                <div id="progressBar" class="progress-bar"></div>
+            </div>
+        </div>
+
+        <!-- Control Buttons -->
+        <div class="control-buttons">
+            <button id="startBtn" class="control-btn control-btn-primary">
+                <i class="fas fa-play"></i>
+                <span>Iniciar Verificación</span>
+            </button>
+            <button id="pauseBtn" class="control-btn control-btn-secondary" disabled>
+                <i class="fas fa-pause"></i>
+                <span>Pausar</span>
+            </button>
+            <button id="stopBtn" class="control-btn control-btn-secondary" disabled>
+                <i class="fas fa-stop"></i>
+                <span>Detener</span>
+            </button>
+            <button id="clearBtn" class="control-btn control-btn-danger">
+                <i class="fas fa-trash-alt"></i>
+                <span>Limpiar Todo</span>
+            </button>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Card List -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-credit-card"></i>
+                    </div>
+                    <h3 class="card-title">Lista de Tarjetas</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="cardList" class="form-label">Ingrese las tarjetas (una por línea)</label>
+                        <textarea id="cardList" placeholder="Ejemplo: 4111111111111111|12|2025|123&#10;5500000000000004|06|2026|789"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Configuration -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                    <h3 class="card-title">Configuración</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="gatewaySelect" class="form-label">Pasarela de Pago</label>
+                        <select id="gatewaySelect">
+                            <option value="amazon_us">Amazon Estados Unidos</option>
+                            <option value="amazon_it">Amazon Italia</option>
+                            <option value="amazon_ca">Amazon Canadá</option>
+                            <option value="amazon_mx">Amazon México</option>
+                            <option value="amazon_au">Amazon Australia</option>
+                            <option value="amazon_jp">Amazon Japón</option>
+                            <option value="amazon_bussines">Amazon Business</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="cookies" class="form-label">Cookies de Sesión</label>
+                        <div style="display: flex; gap: 1rem; align-items: center;">
+                            <input type="text" id="cookies" placeholder="Pegue las cookies de Amazon aquí..." style="flex: 1;">
+                            <button id="saveCookiesBtn" class="btn-header btn-header-success" style="white-space: nowrap;">
+                                <i class="fas fa-save"></i>
+                                <span>Guardar</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Tabs -->
+        <div class="tabs-container">
+            <div class="tabs-header">
+                <div class="tab active" data-tab="approved">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Aprobadas</span>
+                    <span id="approvedBadge" class="badge">0</span>
+                </div>
+                <div class="tab" data-tab="rejected">
+                    <i class="fas fa-times-circle"></i>
+                    <span>Rechazadas</span>
+                    <span id="rejectedBadge" class="badge">0</span>
+                </div>
+                <div class="tab" data-tab="errors">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Errores</span>
+                    <span id="errorsBadge" class="badge">0</span>
+                </div>
+            </div>
+
+            <!-- Approved Tab -->
+            <div id="approvedContent" class="tab-content active">
+                <div class="control-buttons" style="margin-bottom: 1.5rem;">
+                    <button id="copyAllApproved" class="control-btn control-btn-secondary">
+                        <i class="fas fa-copy"></i>
+                        <span>Copiar Todos</span>
+                    </button>
+                    <button id="clearApproved" class="control-btn control-btn-danger">
+                        <i class="fas fa-trash-alt"></i>
+                        <span>Limpiar Lista</span>
+                    </button>
+                </div>
+                <div class="table-container">
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>Tarjeta</th>
+                                <th>Resultado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="approvedTable">
+                            <tr>
+                                <td colspan="3" class="empty-message">No hay tarjetas aprobadas aún</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Rejected Tab -->
+            <div id="rejectedContent" class="tab-content">
+                <div class="control-buttons" style="margin-bottom: 1.5rem;">
+                    <button id="clearRejected" class="control-btn control-btn-danger">
+                        <i class="fas fa-trash-alt"></i>
+                        <span>Limpiar Lista</span>
+                    </button>
+                </div>
+                <div class="table-container">
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>Tarjeta</th>
+                                <th>Motivo</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rejectedTable">
+                            <tr>
+                                <td colspan="3" class="empty-message">No hay tarjetas rechazadas aún</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Errors Tab -->
+            <div id="errorsContent" class="tab-content">
+                <div class="control-buttons" style="margin-bottom: 1.5rem;">
+                    <button id="clearErrors" class="control-btn control-btn-danger">
+                        <i class="fas fa-trash-alt"></i>
+                        <span>Limpiar Lista</span>
+                    </button>
+                </div>
+                <div class="table-container">
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>Tarjeta</th>
+                                <th>Error</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="errorsTable">
+                            <tr>
+                                <td colspan="3" class="empty-message">No hay errores registrados aún</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>
+                Desarrollado con <i class="fas fa-heart heart-icon"></i> por 
+                <a href="#" target="_blank">GOKU-CHECKER PRO</a>
+            </p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // ========== ELEMENTOS DEL DOM ==========
+            // Botones de sesión y menú - CORREGIDOS
+            const userCreditsDisplay = document.getElementById('userCreditsDisplay');
+            const creditsCount = document.getElementById('creditsCount');
+            const sessionButtons = document.getElementById('sessionButtons');
+            const userInfo = document.getElementById('userInfo');
+            const userAvatar = document.getElementById('userAvatar');
+            const userName = document.getElementById('userName');
+            const creditsBtn = document.getElementById('creditsBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+            
+            // Botones de control
+            const startBtn = document.getElementById('startBtn');
+            const pauseBtn = document.getElementById('pauseBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            
+            // Botones de resultados
+            const copyAllApproved = document.getElementById('copyAllApproved');
+            const clearApproved = document.getElementById('clearApproved');
+            const clearRejected = document.getElementById('clearRejected');
+            const clearErrors = document.getElementById('clearErrors');
+            
+            // Botones de configuración
+            const saveCookiesBtn = document.getElementById('saveCookiesBtn');
+            
+            // Formularios
+            const cardList = document.getElementById('cardList');
+            const gatewaySelect = document.getElementById('gatewaySelect');
+            const cookies = document.getElementById('cookies');
+            
+            // Elementos de estadísticas
+            const approvedCount = document.getElementById('approvedCount');
+            const rejectedCount = document.getElementById('rejectedCount');
+            const errorCount = document.getElementById('errorCount');
+            const approvedBadge = document.getElementById('approvedBadge');
+            const rejectedBadge = document.getElementById('rejectedBadge');
+            const errorsBadge = document.getElementById('errorsBadge');
+            
+            // Elementos de progreso
+            const progressBar = document.getElementById('progressBar');
+            const progressPercentage = document.getElementById('progressPercentage');
+            
+            // Tablas
+            const approvedTable = document.getElementById('approvedTable');
+            const rejectedTable = document.getElementById('rejectedTable');
+            const errorsTable = document.getElementById('errorsTable');
+            
+            // Tabs
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            // ========== VARIABLES DE ESTADO ==========
+            let isChecking = false;
+            let isPaused = false;
+            let currentIndex = 0;
+            let cards = [];
+            let approved = [];
+            let rejected = [];
+            let errors = [];
+            let checkInterval = null;
+            let currentRequest = null;
+            
+            // Variables de usuario
+            let userCredits = 0;
+            let hasActiveSession = false;
+            let currentUser = null;
+
+            // ========== ENDPOINTS ==========
+            const gatewayEndpoints = {
+                'amazon_us': 'us.php',
+                'amazon_it': 'it.php',
+                'amazon_ca': 'ca.php',
+                'amazon_au': 'au.php',
+                'amazon_mx': 'mx.php',
+                'amazon_jp': 'jp.php',
+                'amazon_bussines': 'Amazonbnz.php'
+            };
+
+            // ========== INICIALIZACIÓN ==========
+            initializeApp();
+
+            async function initializeApp() {
+                // Cargar cookies guardadas
+                if (localStorage.getItem('amazonCookies')) {
+                    cookies.value = localStorage.getItem('amazonCookies');
+                }
+                
+                // Verificar sesión del usuario
+                await checkUserSession();
+                
+                // Configurar eventos
+                setupEventListeners();
+            }
+
+            // ========== CONFIGURACIÓN DE EVENTOS ==========
+            function setupEventListeners() {
+                // Botones de sesión - CORREGIDOS
+                creditsBtn.addEventListener('click', showCreditsModal);
+                logoutBtn.addEventListener('click', logoutUser);
+                
+                // Botón de menú ya está como enlace
+                
+                // Control de pestañas
+                tabs.forEach(tab => {
+                    tab.addEventListener('click', function() {
+                        const tabId = this.getAttribute('data-tab');
+                        
+                        tabs.forEach(t => t.classList.remove('active'));
+                        tabContents.forEach(c => c.classList.remove('active'));
+                        
+                        this.classList.add('active');
+                        document.getElementById(`${tabId}Content`).classList.add('active');
+                    });
+                });
+
+                // Botones de control
+                startBtn.addEventListener('click', function() {
+                    if (!hasActiveSession) {
+                        showLoginRequired();
+                        return;
+                    }
+                    
+                    if (userCredits <= 0) {
+                        showNoCreditsWarning();
+                        return;
+                    }
+                    
+                    startChecking();
+                });
+                
+                pauseBtn.addEventListener('click', pauseChecking);
+                stopBtn.addEventListener('click', stopChecking);
+                clearBtn.addEventListener('click', clearAll);
+                
+                // Botones de resultados
+                copyAllApproved.addEventListener('click', copyAllApprovedResults);
+                clearApproved.addEventListener('click', () => clearResults('approved'));
+                clearRejected.addEventListener('click', () => clearResults('rejected'));
+                clearErrors.addEventListener('click', () => clearResults('errors'));
+                
+                // Botón de cookies
+                saveCookiesBtn.addEventListener('click', saveCookies);
+                
+                // Permitir Enter en el campo de tarjetas
+                cardList.addEventListener('keypress', function(e) {
+                    if (e.ctrlKey && e.key === 'Enter') {
+                        startBtn.click();
+                    }
+                });
+            }
+
+            // ========== FUNCIONES DE SESIÓN ==========
+            async function checkUserSession() {
+                try {
+                    const response = await fetch('auth.php?action=check_session');
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        hasActiveSession = true;
+                        userCredits = data.user.credits || 0;
+                        currentUser = data.user;
+                        
+                        // Actualizar UI
+                        updateUserUI();
+                        
+                        // Habilitar botón de inicio
+                        startBtn.disabled = false;
+                        startBtn.innerHTML = '<i class="fas fa-play"></i><span>Iniciar Verificación</span>';
+                        
+                    } else {
+                        // No tiene sesión activa
+                        hasActiveSession = false;
+                        currentUser = null;
+                        
+                        // Actualizar UI para mostrar que necesita iniciar sesión
+                        updateNoSessionUI();
+                        
+                        // Deshabilitar botón de inicio
+                        startBtn.disabled = true;
+                        startBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i><span>Inicia Sesión</span>';
+                    }
+                } catch (error) {
+                    console.error('Error verificando sesión:', error);
+                    showToast('error', 'Error de conexión al verificar sesión');
+                }
+            }
+
+            function updateUserUI() {
+                // Actualizar créditos
+                creditsCount.textContent = userCredits;
+                
+                // Actualizar color de créditos
+                updateCreditsColor();
+                
+                // Mostrar botones de sesión
+                sessionButtons.style.display = 'flex';
+                
+                // Actualizar información del usuario
+                if (currentUser) {
+                    const initial = currentUser.username ? currentUser.username.charAt(0).toUpperCase() : 'U';
+                    userAvatar.textContent = initial;
+                    userName.textContent = currentUser.username || 'Usuario';
+                }
+                
+                // Cambiar comportamiento del display de créditos
+                userCreditsDisplay.classList.remove('no-session');
+                userCreditsDisplay.style.cursor = 'default';
+                userCreditsDisplay.title = '';
+                userCreditsDisplay.removeEventListener('click', redirectToLogin);
+            }
+
+            function updateNoSessionUI() {
+                // Mostrar 0 créditos
+                creditsCount.textContent = '0';
+                
+                // Cambiar estilo
+                userCreditsDisplay.classList.add('no-session');
+                userCreditsDisplay.style.cursor = 'pointer';
+                userCreditsDisplay.title = "Haz clic para iniciar sesión";
+                
+                // Ocultar botones de sesión
+                sessionButtons.style.display = 'none';
+                
+                // Agregar evento para redirigir al login
+                userCreditsDisplay.addEventListener('click', redirectToLogin);
+            }
+
+            function redirectToLogin() {
+                window.location.href = 'login.html';
+            }
+
+            function updateCreditsColor() {
+                if (userCredits <= 0) {
+                    userCreditsDisplay.style.background = 'linear-gradient(135deg, var(--error), var(--error-dark))';
+                } else if (userCredits < 10) {
+                    userCreditsDisplay.style.background = 'linear-gradient(135deg, var(--warning), var(--warning-dark))';
+                } else {
+                    userCreditsDisplay.style.background = 'linear-gradient(135deg, var(--primary), var(--primary-dark))';
+                }
+            }
+
+            function showLoginRequired() {
+                Swal.fire({
+                    title: 'Sesión Requerida',
+                    text: 'Debes iniciar sesión para usar el validador',
+                    icon: 'warning',
+                    confirmButtonText: 'Iniciar Sesión',
+                    cancelButtonText: 'Cancelar',
+                    showCancelButton true,
+                    confirmButtonColor: '#4299e1',
+                    background: '#1a202c',
+                    color: '#ffffff'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = 'login.html';
+                    }
+                });
+            }
+
+            function showNoCreditsWarning() {
+                Swal.fire({
+                    title: 'Sin Créditos',
+                    text: 'No tienes créditos suficientes. Por favor, recarga tu cuenta.',
+                    icon: 'error',
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#4299e1',
+                    background: '#1a202c',
+                    color: '#ffffff'
+                });
+            }
+
+            async function showCreditsModal() {
+                const { value: key } = await Swal.fire({
+                    title: 'Recargar Créditos',
+                    input: 'text',
+                    inputLabel: 'Ingresa tu clave de recarga',
+                    inputPlaceholder: 'Ej: CK-ABC123DEF456',
+                    showCancelButton: true,
+                    confirmButtonText: 'Recargar',
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: '#38a169',
+                    cancelButtonColor: '#718096',
+                    background: '#1a202c',
+                    color: '#ffffff'
+                });
+
+                if (key) {
+                    await rechargeCredits(key);
+                }
+            }
+
+            async function rechargeCredits(key) {
+                try {
+                    const formData = new FormData();
+                    formData.append('key', key);
+
+                    const response = await fetch('auth.php?action=recharge_credits', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        userCredits = data.new_balance;
+                        creditsCount.textContent = userCredits;
+                        updateCreditsColor();
+                        
+                        showToast('success', `¡Recarga exitosa! +${data.credits_added} créditos`);
+                    } else {
+                        showToast('error', data.message || 'Error al recargar créditos');
+                    }
+                } catch (error) {
+                    console.error('Error recargando créditos:', error);
+                    showToast('error', 'Error de conexión al recargar créditos');
+                }
+            }
+
+            async function logoutUser() {
+                const result = await Swal.fire({
+                    title: 'Cerrar Sesión',
+                    text: '¿Estás seguro de que deseas cerrar sesión?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, cerrar sesión',
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: '#e53e3e',
+                    cancelButtonColor: '#718096',
+                    background: '#1a202c',
+                    color: '#ffffff'
+                });
+
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch('auth.php?action=logout', {
+                            method: 'POST'
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            showToast('success', 'Sesión cerrada correctamente');
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1500);
+                        } else {
+                            showToast('error', 'Error al cerrar sesión');
+                        }
+                    } catch (error) {
+                        console.error('Error cerrando sesión:', error);
+                        showToast('error', 'Error de conexión al cerrar sesión');
+                    }
+                }
+            }
+
+            // ========== FUNCIONES PRINCIPALES DEL CHECKER ==========
+            function startChecking() {
+                if (isChecking && !isPaused) return;
+                
+                if (!isPaused) {
+                    const list = cardList.value.trim();
+                    if (list === '') {
+                        showToast('error', 'Por favor, ingrese una lista de tarjetas.');
+                        return;
+                    }
+                    
+                    if (gatewaySelect.value.includes('amazon') && cookies.value.trim() === '') {
+                        showToast('error', 'Por favor, ingrese las cookies de Amazon.');
+                        return;
+                    }
+                    
+                    cards = list.split('\n').filter(line => line.trim() !== '');
+                    if (cards.length === 0) {
+                        showToast('error', 'No se encontraron tarjetas válidas.');
+                        return;
+                    }
+                    
+                    if (userCredits < cards.length) {
+                        Swal.fire({
+                            title: 'Créditos Insuficientes',
+                            text: `Necesitas ${cards.length} créditos pero solo tienes ${userCredits}.`,
+                            icon: 'warning',
+                            confirmButtonText: 'Entendido',
+                            background: '#1a202c',
+                            color: '#ffffff'
+                        });
+                        return;
+                    }
+                    
+                    currentIndex = 0;
+                    updateProgressBar(0);
+                }
+                
+                isChecking = true;
+                isPaused = false;
+                
+                startBtn.disabled = true;
+                pauseBtn.disabled = false;
+                stopBtn.disabled = false;
+                
+                showToast('success', '¡Verificación iniciada!');
+                
+                if (checkInterval) clearInterval(checkInterval);
+                checkNext();
+            }
+
+            async function checkNext() {
+                if (!isChecking || isPaused) return;
+                
+                if (currentIndex >= cards.length) {
+                    stopChecking();
+                    showToast('success', '¡Verificación completada!');
+                    return;
+                }
+                
+                const card = cards[currentIndex].trim();
+                if (card === '') {
+                    currentIndex++;
+                    checkNext();
+                    return;
+                }
+                
+                // Verificar créditos antes de procesar
+                if (userCredits <= 0) {
+                    showToast('error', 'Sin créditos disponibles');
+                    stopChecking();
+                    return;
+                }
+                
+                await processCard(card);
+            }
+
+            async function processCard(card) {
+                try {
+                    // Consumir crédito
+                    const formData = new FormData();
+                    formData.append('consume', '1');
+
+                    const creditResponse = await fetch('auth.php?action=consume_credit', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const creditData = await creditResponse.json();
+
+                    if (creditData.success) {
+                        userCredits = creditData.new_balance;
+                        creditsCount.textContent = userCredits;
+                        updateCreditsColor();
+                        
+                        // Verificar tarjeta
+                        if (!isValidCardFormat(card)) {
+                            handleError(card, "Formato inválido. Use: Número|Mes|Año|CVV");
+                            currentIndex++;
+                            updateProgressBar((currentIndex / cards.length) * 100);
+                            setTimeout(checkNext, 100);
+                            return;
+                        }
+                        
+                        await checkCard(card);
+                        
+                    } else {
+                        showToast('error', 'Error al consumir crédito');
+                        stopChecking();
+                    }
+                } catch (error) {
+                    console.error('Error procesando tarjeta:', error);
+                    handleError(card, "Error de procesamiento");
+                    currentIndex++;
+                    updateProgressBar((currentIndex / cards.length) * 100);
+                    setTimeout(checkNext, 500);
+                }
+            }
+
+            async function checkCard(card) {
+                const gateway = gatewaySelect.value;
+                const endpoint = gatewayEndpoints[gateway];
+                
+                if (!endpoint) {
+                    handleError(card, "Pasarela no configurada");
+                    return;
+                }
+                
+                const formData = new FormData();
+                formData.append('lista', card);
+                
+                if (gateway.includes('amazon')) {
+                    formData.append('cookies', cookies.value);
+                }
+                
+                try {
+                    currentRequest = new XMLHttpRequest();
+                    currentRequest.open('POST', endpoint, true);
+                    
+                    currentRequest.onreadystatechange = function() {
+                        if (this.readyState === 4) {
+                            if (this.status === 200) {
+                                processResponse(card, this.responseText);
+                            } else {
+                                handleError(card, `Error en la solicitud: ${this.status}`);
+                            }
+                            
+                            currentRequest = null;
+                            currentIndex++;
+                            updateProgressBar((currentIndex / cards.length) * 100);
+                            
+                            setTimeout(checkNext, 500);
+                        }
+                    };
+                    
+                    currentRequest.onerror = function() {
+                        handleError(card, "Error de conexión");
+                        currentRequest = null;
+                        currentIndex++;
+                        updateProgressBar((currentIndex / cards.length) * 100);
+                        setTimeout(checkNext, 500);
+                    };
+                    
+                    currentRequest.send(formData);
+                } catch (error) {
+                    handleError(card, error.message);
+                    currentIndex++;
+                    updateProgressBar((currentIndex / cards.length) * 100);
+                    setTimeout(checkNext, 500);
+                }
+            }
+
+            function pauseChecking() {
+                if (!isChecking || isPaused) return;
+                
+                isPaused = true;
+                pauseBtn.disabled = true;
+                startBtn.disabled = false;
+                startBtn.innerHTML = '<i class="fas fa-play"></i><span>Continuar</span>';
+                
+                if (currentRequest) {
+                    currentRequest.abort();
+                    currentRequest = null;
+                }
+                
+                showToast('info', 'Verificación pausada.');
+            }
+
+            function stopChecking() {
+                if (!isChecking) return;
+                
+                isChecking = false;
+                isPaused = false;
+                
+                startBtn.disabled = false;
+                pauseBtn.disabled = true;
+                stopBtn.disabled = true;
+                startBtn.innerHTML = '<i class="fas fa-play"></i><span>Iniciar Verificación</span>';
+                
+                if (currentRequest) {
+                    currentRequest.abort();
+                    currentRequest = null;
+                }
+                
+                currentIndex = 0;
+                updateProgressBar(0);
+                
+                showToast('info', 'Verificación detenida.');
+            }
+
+            // ========== FUNCIONES AUXILIARES ==========
+            function isValidCardFormat(card) {
+                const parts = card.split('|');
+                if (parts.length !== 4) return false;
+                
+                const [number, month, year, cvv] = parts;
+                
+                if (!/^\d{13,19}$/.test(number.replace(/\s/g, ''))) return false;
+                if (!/^(0?[1-9]|1[0-2])$/.test(month)) return false;
+                if (!/^\d{4}$/.test(year)) return false;
+                if (!/^\d{3,4}$/.test(cvv)) return false;
+                
+                return true;
+            }
+
+            function processResponse(card, response) {
+                const isApproved = response.includes('<span class="text-success">Aprovada</span>');
+                
+                if (isApproved) {
+                    const resultMatch = response.match(/<span class="text-success">(.*?)<\/span> ➔ Tempo de resposta:/);
+                    const result = resultMatch ? resultMatch[1].trim() : "Aprobado";
+                    
+                    approved.push({
+                        card: card,
+                        result: `${result} | GOKU-CHECKER`
+                    });
+                    
+                    updateApprovedTable();
+                } else {
+                    const reasonMatch = response.match(/<span class="text-danger">(.*?)<\/span> ➔ Tempo de resposta:/);
+                    const reason = reasonMatch ? reasonMatch[1].trim() : "Rechazado";
+                    
+                    rejected.push({
+                        card: card,
+                        reason: `${reason} | GOKU-CHECKER`
+                    });
+                    
+                    updateRejectedTable();
+                }
+                
+                updateCounters();
+            }
+
+            function handleError(card, errorMessage) {
+                errors.push({
+                    card: card,
+                    error: errorMessage
+                });
+                
+                updateErrorsTable();
+                updateCounters();
+            }
+
+            function updateApprovedTable() {
+                if (approved.length === 0) {
+                    approvedTable.innerHTML = '<tr><td colspan="3" class="empty-message">No hay tarjetas aprobadas aún</td></tr>';
+                    return;
+                }
+                
+                let html = '';
+                approved.forEach((item, index) => {
+                    html += `
+                        <tr>
+                            <td>${item.card}</td>
+                            <td>${item.result}</td>
+                            <td class="action-buttons">
+                                <button class="action-btn copy-btn" onclick="copyToClipboard('${item.card} | ${item.result}')" title="Copiar">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                                <button class="action-btn delete-btn" onclick="deleteApprovedItem(${index})" title="Eliminar">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                approvedTable.innerHTML = html;
+            }
+
+            function updateRejectedTable() {
+                if (rejected.length === 0) {
+                    rejectedTable.innerHTML = '<tr><td colspan="3" class="empty-message">No hay tarjetas rechazadas aún</td></tr>';
+                    return;
+                }
+                
+                let html = '';
+                rejected.forEach((item, index) => {
+                    html += `
+                        <tr>
+                            <td>${item.card}</td>
+                            <td>${item.reason}</td>
+                            <td class="action-buttons">
+                                <button class="action-btn delete-btn" onclick="deleteRejectedItem(${index})" title="Eliminar">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                rejectedTable.innerHTML = html;
+            }
+
+            function updateErrorsTable() {
+                if (errors.length === 0) {
+                    errorsTable.innerHTML = '<tr><td colspan="3" class="empty-message">No hay errores registrados aún</td></tr>';
+                    return;
+                }
+                
+                let html = '';
+                errors.forEach((item, index) => {
+                    html += `
+                        <tr>
+                            <td>${item.card}</td>
+                            <td>${item.error}</td>
+                            <td class="action-buttons">
+                                <button class="action-btn delete-btn" onclick="deleteErrorItem(${index})" title="Eliminar">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                errorsTable.innerHTML = html;
+            }
+
+            function updateCounters() {
+                approvedCount.textContent = approved.length;
+                rejectedCount.textContent = rejected.length;
+                errorCount.textContent = errors.length;
+                
+                approvedBadge.textContent = approved.length;
+                rejectedBadge.textContent = rejected.length;
+                errorsBadge.textContent = errors.length;
+            }
+
+            function updateProgressBar(percentage) {
+                progressBar.style.width = `${percentage}%`;
+                progressPercentage.textContent = `${Math.round(percentage)}%`;
+            }
+
+            // ========== FUNCIONES DE GESTIÓN DE RESULTADOS ==========
+            function copyAllApprovedResults() {
+                if (approved.length === 0) {
+                    showToast('warning', 'No hay tarjetas aprobadas para copiar.');
+                    return;
+                }
+                
+                const approvedText = approved.map(item => `${item.card} | ${item.result}`).join('\n');
+                copyToClipboard(approvedText);
+                showToast('success', '¡Tarjetas aprobadas copiadas al portapapeles!');
+            }
+
+            function copyToClipboard(text) {
+                navigator.clipboard.writeText(text).catch(err => {
+                    console.error('Error al copiar:', err);
+                    showToast('error', 'Error al copiar al portapapeles');
+                });
+            }
+
+            function clearResults(type) {
+                if (type === 'approved') {
+                    if (approved.length === 0) {
+                        showToast('warning', 'No hay tarjetas aprobadas para limpiar.');
+                        return;
+                    }
+                    approved = [];
+                    updateApprovedTable();
+                } else if (type === 'rejected') {
+                    if (rejected.length === 0) {
+                        showToast('warning', 'No hay tarjetas rechazadas para limpiar.');
+                        return;
+                    }
+                    rejected = [];
+                    updateRejectedTable();
+                } else if (type === 'errors') {
+                    if (errors.length === 0) {
+                        showToast('warning', 'No hay errores para limpiar.');
+                        return;
+                    }
+                    errors = [];
+                    updateErrorsTable();
+                }
+                
+                updateCounters();
+                showToast('success', 'Lista limpiada con éxito');
+            }
+
+            function clearAll() {
+                Swal.fire({
+                    title: '¿Limpiar todo?',
+                    text: 'Esta acción borrará todas las tarjetas y resultados.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, limpiar todo',
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: '#e53e3e',
+                    cancelButtonColor: '#718096',
+                    background: '#1a202c',
+                    color: '#ffffff'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        cardList.value = '';
+                        approved = [];
+                        rejected = [];
+                        errors = [];
+                        currentIndex = 0;
+                        isChecking = false;
+                        isPaused = false;
+                        
+                        updateApprovedTable();
+                        updateRejectedTable();
+                        updateErrorsTable();
+                        updateCounters();
+                        updateProgressBar(0);
+                        
+                        startBtn.disabled = !hasActiveSession;
+                        pauseBtn.disabled = true;
+                        stopBtn.disabled = true;
+                        
+                        if (!hasActiveSession) {
+                            startBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i><span>Inicia Sesión</span>';
+                        } else {
+                            startBtn.innerHTML = '<i class="fas fa-play"></i><span>Iniciar Verificación</span>';
+                        }
+                        
+                        showToast('success', 'Todos los datos han sido limpiados');
+                    }
+                });
+            }
+
+            function saveCookies() {
+                if (cookies.value.trim() === '') {
+                    showToast('error', 'Por favor, ingrese las cookies antes de guardar.');
+                    return;
+                }
+                localStorage.setItem('amazonCookies', cookies.value);
+                showToast('success', '¡Cookies guardadas con éxito!');
+            }
+
+            // ========== FUNCIONES GLOBALES PARA LOS BOTONES DE TABLA ==========
+            window.copyToClipboard = function(text) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('success', 'Copiado al portapapeles');
+                }).catch(err => {
+                    console.error('Error al copiar:', err);
+                    showToast('error', 'Error al copiar');
+                });
+            };
+
+            window.deleteApprovedItem = function(index) {
+                approved.splice(index, 1);
+                updateApprovedTable();
+                updateCounters();
+                showToast('success', 'Tarjeta eliminada');
+            };
+
+            window.deleteRejectedItem = function(index) {
+                rejected.splice(index, 1);
+                updateRejectedTable();
+                updateCounters();
+                showToast('success', 'Tarjeta eliminada');
+            };
+
+            window.deleteErrorItem = function(index) {
+                errors.splice(index, 1);
+                updateErrorsTable();
+                updateCounters();
+                showToast('success', 'Error eliminado');
+            };
+
+            // ========== FUNCIÓN DE NOTIFICACIÓN ==========
+            function showToast(icon, message) {
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        toast.addEventListener('mouseenter', Swal.stopTimer);
+                        toast.addEventListener('mouseleave', Swal.resumeTimer);
+                    },
+                    background: '#1a202c',
+                    color: '#ffffff'
+                });
+                
+                Toast.fire({
+                    icon: icon,
+                    title: message
+                });
+            }
+        });
+    </script>
+</body>
+</html>

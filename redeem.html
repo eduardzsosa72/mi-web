@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recargar Créditos | Amazon Checker Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css">
+    <style>
+        :root {
+            --primary: #8B5CF6;
+            --primary-dark: #7C3AED;
+            --primary-light: #A78BFA;
+            --primary-lighter: #EDE9FE;
+            --secondary: #06D6A0;
+            --success: #06D6A0;
+            --success-dark: #05B384;
+            --success-light: #D1FAE5;
+            --warning: #FBBF24;
+            --warning-dark: #F59E0B;
+            --warning-light: #FEF3C7;
+            --error: #EF4444;
+            --error-dark: #DC2626;
+            --error-light: #FEE2E2;
+            --info: #3B82F6;
+            --info-dark: #2563EB;
+            --info-light: #DBEAFE;
+            --dark: #1F2937;
+            --darker: #111827;
+            --light: #F9FAFB;
+            --gray: #6B7280;
+            --gray-light: #E5E7EB;
+            --card-bg: #FFFFFF;
+            --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: var(--dark);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        /* Header Styles */
+        .app-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--card-shadow);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .app-logo {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .app-logo-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
+        }
+
+        .app-logo-icon i {
+            font-size: 1.8rem;
+            color: white;
+        }
+
+        .app-title h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.25rem;
+        }
+
+        .app-title p {
+            color: var(--gray);
+            font-size: 1rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .user-credits {
+            background: var(--primary);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        /* Card Styles */
+        .card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 2rem;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2.5rem;
+            gap: 1.5rem;
+        }
+
+        .card-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--primary-lighter);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 2rem;
+            transition: var(--transition);
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.2);
+        }
+
+        .card-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 2rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 1.1rem;
+        }
+
+        textarea, input, select {
+            width: 100%;
+            background: var(--light);
+            border: 2px solid var(--gray-light);
+            border-radius: 16px;
+            color: var(--dark);
+            padding: 1.25rem 1.5rem;
+            font-size: 1.1rem;
+            transition: var(--transition);
+            font-family: 'Inter', sans-serif;
+        }
+
+        textarea {
+            height: 120px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        textarea:focus, input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+            background: white;
+        }
+
+        /* Buttons */
+        .btn-group {
+            display: flex;
+            gap: 1.25rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            padding: 1.25rem 2.5rem;
+            border-radius: 16px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:active {
+            transform: translateY(2px);
+        }
+
+        .btn i {
+            font-size: 1.2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .btn:hover i {
+            transform: scale(1.2);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 12px 30px rgba(139, 92, 246, 0.4);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 16px 40px rgba(139, 92, 246, 0.6);
+            transform: translateY(-4px);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--gray);
+            border: 2px solid var(--gray-light);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.2);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), var(--success-dark));
+            color: white;
+            box-shadow: 0 12px 30px rgba(6, 214, 160, 0.4);
+        }
+
+        .btn-success:hover {
+            box-shadow: 0 16px 40px rgba(6, 214, 160, 0.6);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--error), var(--error-dark));
+            color: white;
+            box-shadow: 0 12px 30px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 16px 40px rgba(239, 68, 68, 0.6);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .btn:disabled:hover::before {
+            left: -100%;
+        }
+
+        /* History Section */
+        .history-section {
+            margin-top: 2rem;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 20px;
+            border: 1px solid var(--gray-light);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        .results-table th {
+            text-align: left;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, var(--primary-lighter), white);
+            color: var(--primary-dark);
+            font-weight: 700;
+            font-size: 1rem;
+            border-bottom: 3px solid var(--primary-light);
+        }
+
+        .results-table td {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--gray-light);
+            color: var(--dark);
+            font-size: 1rem;
+        }
+
+        .results-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .results-table tr:hover td {
+            background: var(--primary-lighter);
+        }
+
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-success {
+            background: var(--success-light);
+            color: var(--success-dark);
+        }
+
+        .status-error {
+            background: var(--error-light);
+            color: var(--error-dark);
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 5rem 2rem;
+            color: var(--gray);
+            font-style: italic;
+            font-size: 1.2rem;
+        }
+
+        /* Footer */
+        .app-footer {
+            text-align: center;
+            padding-top: 3rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1rem;
+        }
+
+        .heart-icon {
+            color: var(--error);
+            display: inline-block;
+            animation: heartbeat 1.5s infinite;
+            margin: 0 0.5rem;
+        }
+
+        .app-footer a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+            border-bottom: 2px solid transparent;
+        }
+
+        .app-footer a:hover {
+            border-bottom-color: white;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .app-container {
+                padding: 1rem;
+            }
+
+            .app-header {
+                padding: 1.5rem;
+            }
+
+            .app-logo {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .user-info {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-buttons {
+                width: 100%;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .card {
+                padding: 2rem;
+            }
+
+            .card-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+            }
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="app-logo">
+                <div style="display: flex; align-items: center; gap: 1.5rem;">
+                    <div class="app-logo-icon">
+                        <i class="fas fa-key"></i>
+                    </div>
+                    <div class="app-title">
+                        <h1>Recargar Créditos</h1>
+                        <p>Sistema de redención de keys</p>
+                    </div>
+                </div>
+                <div class="user-info">
+                    <div class="user-credits">
+                        <i class="fas fa-coins"></i>
+                        <span id="creditsCount">0</span> créditos
+                    </div>
+                    <div class="nav-buttons">
+                        <a href="index.html" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i>
+                            <span>Volver</span>
+                        </a>
+                        <button id="refreshBtn" class="btn btn-primary">
+                            <i class="fas fa-sync-alt"></i>
+                            <span>Actualizar</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i class="fas fa-gift"></i>
+                </div>
+                <h3 class="card-title">Canjear Key</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="keyInput" class="form-label">Ingrese su key de activación</label>
+                    <input type="text" id="keyInput" placeholder="Ejemplo: AMZ-PRO-XXXX-XXXX-XXXX" maxlength="50">
+                    <div style="font-size: 0.95rem; color: var(--gray); margin-top: 0.75rem;">
+                        Las keys son proporcionadas por el administrador del sistema
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button id="redeemBtn" class="btn btn-success">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Canjear Key</span>
+                    </button>
+                    <button id="clearBtn" class="btn btn-secondary">
+                        <i class="fas fa-times"></i>
+                        <span>Limpiar</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i class="fas fa-history"></i>
+                </div>
+                <h3 class="card-title">Historial de Recargas</h3>
+            </div>
+            <div class="card-body">
+                <div class="history-section">
+                    <div class="table-container">
+                        <table class="results-table">
+                            <thead>
+                                <tr>
+                                    <th>Key</th>
+                                    <th>Créditos</th>
+                                    <th>Fecha</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTable">
+                                <tr>
+                                    <td colspan="4" class="empty-message">No hay historial de recargas</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="app-footer">
+            <p>
+                Desarrollado con <i class="fas fa-heart heart-icon"></i> por 
+                <a href="#" target="_blank">Amazon Checker Pro</a>
+            </p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elementos de la interfaz
+            const keyInput = document.getElementById('keyInput');
+            const redeemBtn = document.getElementById('redeemBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const refreshBtn = document.getElementById('refreshBtn');
+            const creditsCount = document.getElementById('creditsCount');
+            const historyTable = document.getElementById('historyTable');
+
+            // Estado de la aplicación
+            let userCredits = 0;
+            let redemptionHistory = [];
+
+            // Cargar datos iniciales
+            loadUserData();
+            loadRedemptionHistory();
+
+            // Event Listeners
+            redeemBtn.addEventListener('click', redeemKey);
+            clearBtn.addEventListener('click', clearInput);
+            refreshBtn.addEventListener('click', refreshData);
+
+            // Permitir canjear con Enter
+            keyInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    redeemKey();
+                }
+            });
+
+            async function loadUserData() {
+                try {
+                    const response = await fetch('auth.php?action=check_session');
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        userCredits = data.user.credits;
+                        creditsCount.textContent = userCredits;
+                    } else {
+                        // Si no hay sesión, redirigir al login
+                        window.location.href = 'login.html';
+                    }
+                } catch (error) {
+                    console.error('Error cargando datos:', error);
+                    showToast('error', 'Error de conexión');
+                }
+            }
+
+            async function loadRedemptionHistory() {
+                try {
+                    const response = await fetch('redeem.php?action=get_history');
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        redemptionHistory = data.history;
+                        updateHistoryTable();
+                    } else {
+                        showToast('error', data.message || 'Error cargando historial');
+                    }
+                } catch (error) {
+                    console.error('Error cargando historial:', error);
+                    showToast('error', 'Error de conexión');
+                }
+            }
+
+            async function redeemKey() {
+                const key = keyInput.value.trim();
+                
+                if (!key) {
+                    showToast('error', 'Por favor, ingrese una key');
+                    return;
+                }
+
+                if (key.length < 10) {
+                    showToast('error', 'La key parece ser inválida');
+                    return;
+                }
+
+                // Mostrar loading
+                redeemBtn.disabled = true;
+                redeemBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Procesando...</span>';
+
+                try {
+                    const formData = new FormData();
+                    formData.append('key', key);
+
+                    const response = await fetch('redeem.php?action=redeem', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        showToast('success', `¡Key canjeada exitosamente! +${data.credits_added} créditos`);
+                        keyInput.value = '';
+                        
+                        // Actualizar créditos
+                        userCredits = data.new_balance;
+                        creditsCount.textContent = userCredits;
+                        
+                        // Recargar historial
+                        await loadRedemptionHistory();
+                    } else {
+                        showToast('error', data.message || 'Error al canjear la key');
+                    }
+                } catch (error) {
+                    console.error('Error canjeando key:', error);
+                    showToast('error', 'Error de conexión');
+                } finally {
+                    // Restaurar botón
+                    redeemBtn.disabled = false;
+                    redeemBtn.innerHTML = '<i class="fas fa-check-circle"></i><span>Canjear Key</span>';
+                }
+            }
+
+            function clearInput() {
+                keyInput.value = '';
+                keyInput.focus();
+            }
+
+            async function refreshData() {
+                refreshBtn.disabled = true;
+                refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Actualizando...</span>';
+                
+                await Promise.all([
+                    loadUserData(),
+                    loadRedemptionHistory()
+                ]);
+                
+                refreshBtn.disabled = false;
+                refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i><span>Actualizar</span>';
+                showToast('success', 'Datos actualizados');
+            }
+
+            function updateHistoryTable() {
+                if (redemptionHistory.length === 0) {
+                    historyTable.innerHTML = '<tr><td colspan="4" class="empty-message">No hay historial de recargas</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                redemptionHistory.forEach(item => {
+                    const date = new Date(item.redeemed_at).toLocaleString('es-ES');
+                    const statusClass = item.status === 'used' ? 'status-success' : 'status-error';
+                    const statusText = item.status === 'used' ? 'Canjeado' : 'Inválida';
+                    
+                    html += `
+                        <tr>
+                            <td>${maskKey(item.key_value)}</td>
+                            <td>+${item.credits}</td>
+                            <td>${date}</td>
+                            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                        </tr>
+                    `;
+                });
+
+                historyTable.innerHTML = html;
+            }
+
+            function maskKey(key) {
+                if (key.length <= 8) return key;
+                return key.substring(0, 4) + '***' + key.substring(key.length - 4);
+            }
+
+            // Notificación Toast usando SweetAlert2
+            function showToast(icon, message) {
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        toast.addEventListener('mouseenter', Swal.stopTimer)
+                        toast.addEventListener('mouseleave', Swal.resumeTimer)
+                    },
+                    background: '#FFFFFF',
+                    color: '#1F2937'
+                })
+                
+                Toast.fire({
+                    icon: icon,
+                    title: message
+                })
+            }
+        });
+    </script>
+</body>
+</html>

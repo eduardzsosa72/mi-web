@@ -1,0 +1,1959 @@
+<?php
+session_start();
+require_once 'config.php';
+
+// Verificar sesión
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['logged_in']) || !$_SESSION['logged_in']) {
+    header('Location: login.html');
+    exit;
+}
+
+// Obtener datos del usuario para mostrar en el dashboard
+$user_id = $_SESSION['user_id'];
+$database = new Database();
+$db = $database->getConnection();
+
+$userData = [];
+$isAdmin = false;
+$usedCredits = 0;
+$totalChecks = 0;
+
+if ($db) {
+    try {
+        // Obtener datos del usuario
+        $stmt = $db->prepare("SELECT username, email, credits, is_admin FROM users WHERE id = ?");
+        $stmt->execute([$user_id]);
+        $userData = $stmt->fetch(PDO::FETCH_ASSOC);
+        $isAdmin = $userData['is_admin'] ?? false;
+        
+        // Obtener créditos usados y verificaciones del usuario
+        $stmt = $db->prepare("
+            SELECT 
+                COALESCE(SUM(ck.credits_amount), 0) as used_credits,
+                COUNT(ck.id) as total_checks
+            FROM credit_keys ck 
+            WHERE ck.used_by = ?
+        ");
+        $stmt->execute([$user_id]);
+        $stats = $stmt->fetch(PDO::FETCH_ASSOC);
+        $usedCredits = $stats['used_credits'] ?? 0;
+        $totalChecks = $stats['total_checks'] ?? 0;
+        
+    } catch (Exception $e) {
+        error_log("Error getting user data: " . $e->getMessage());
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PANEL MENU | GOKU-CHECKER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Rubik:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css">
+    <style>
+        :root {
+            --primary: #4299e1;
+            --primary-dark: #3182ce;
+            --primary-light: #63b3ed;
+            --primary-lighter: #ebf8ff;
+            --secondary: #06D6A0;
+            --amazon: #FF9900;
+            --amazon-dark: #E68900;
+            --amazon-light: #FFD699;
+            --paypal: #003087;
+            --paypal-dark: #00256B;
+            --paypal-light: #CCD9F0;
+            --success: #38a169;
+            --success-dark: #2f855a;
+            --success-light: #9ae6b4;
+            --warning: #ed8936;
+            --warning-dark: #dd6b20;
+            --warning-light: #fed7d7;
+            --error: #e53e3e;
+            --error-dark: #c53030;
+            --error-light: #fed7d7;
+            --info: #4299e1;
+            --info-dark: #3182ce;
+            --info-light: #bee3f8;
+            --dark: #1a202c;
+            --darker: #111827;
+            --light: #f7fafc;
+            --gray: #718096;
+            --gray-light: #e2e8f0;
+            --card-bg: rgba(26, 32, 44, 0.95);
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --safe-left: env(safe-area-inset-left, 0px);
+            --safe-right: env(safe-area-inset-right, 0px);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 10px rgba(66, 153, 225, 0.4); }
+            50% { box-shadow: 0 0 20px rgba(66, 153, 225, 0.6); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            background: linear-gradient(135deg, #141e30 0%, #243b55 100%);
+            color: var(--light);
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            line-height: 1.5;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding-top: var(--safe-top);
+            padding-bottom: var(--safe-bottom);
+            padding-left: var(--safe-left);
+            padding-right: var(--safe-right);
+            overflow-x: hidden;
+        }
+
+        html {
+            height: -webkit-fill-available;
+        }
+
+        .app-container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 1rem;
+            padding-top: calc(1rem + var(--safe-top));
+            padding-bottom: calc(1rem + var(--safe-bottom));
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        /* Header Styles - Mobile Optimized */
+        .app-header {
+            background: rgba(26, 32, 44, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--card-shadow);
+            border: 1px solid rgba(66, 153, 225, 0.3);
+            animation: glow 3s infinite alternate;
+        }
+
+        .app-logo {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .app-logo-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            width: 100%;
+        }
+
+        .app-logo-icon {
+            width: 50px;
+            height: 50px;
+            min-width: 50px;
+            min-height: 50px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 15px rgba(66, 153, 225, 0.4);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .app-logo-icon i {
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .app-title {
+            flex: 1;
+            min-width: 0; /* Para evitar overflow */
+        }
+
+        .app-title h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.25rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .app-title p {
+            color: var(--primary-light);
+            font-size: 0.875rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            width: 100%;
+        }
+
+        .user-stats-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .user-credits {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 0.6rem 1rem;
+            border-radius: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
+            transition: var(--transition);
+            font-size: 0.875rem;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .user-credits:hover {
+            transform: translateY(-2px);
+        }
+
+        .user-badge {
+            background: linear-gradient(135deg, var(--info), var(--info-dark));
+            color: white;
+            padding: 0.5rem 0.875rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+        }
+
+        .admin-badge {
+            background: linear-gradient(135deg, var(--error), var(--error-dark));
+            color: white;
+            padding: 0.5rem 0.875rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+        }
+
+        .nav-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            width: 100%;
+        }
+
+        /* Stats Grid - Mobile Optimized */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 1.25rem;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(66, 153, 225, 0.25);
+            animation: fadeIn 0.5s ease-out;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+        }
+
+        .stat-card:active {
+            transform: scale(0.98);
+        }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+
+        .stat-icon {
+            width: 45px;
+            height: 45px;
+            min-width: 45px;
+            min-height: 45px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-card.credits .stat-icon {
+            background: rgba(66, 153, 225, 0.15);
+            color: var(--primary);
+        }
+
+        .stat-card.used .stat-icon {
+            background: rgba(56, 161, 105, 0.15);
+            color: var(--success);
+        }
+
+        .stat-card.available .stat-icon {
+            background: rgba(237, 137, 54, 0.15);
+            color: var(--warning);
+        }
+
+        .stat-card.history .stat-icon {
+            background: rgba(66, 153, 225, 0.15);
+            color: var(--info);
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 800;
+            margin-bottom: 0.25rem;
+            color: var(--primary);
+            line-height: 1.2;
+        }
+
+        .stat-card.credits .stat-value {
+            color: var(--primary);
+        }
+
+        .stat-card.used .stat-value {
+            color: var(--success);
+        }
+
+        .stat-card.available .stat-value {
+            color: var(--warning);
+        }
+
+        .stat-card.history .stat-value {
+            color: var(--info);
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 500;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .stat-change {
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 0.25rem;
+        }
+
+        .positive {
+            color: var(--success-light);
+        }
+
+        .negative {
+            color: var(--error-light);
+        }
+
+        .warning {
+            color: var(--warning-light);
+        }
+
+        /* Main Content - Mobile Optimized */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Card Styles - Mobile Optimized */
+        .card {
+            background: var(--card-bg);
+            border-radius: 18px;
+            padding: 1.5rem;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(66, 153, 225, 0.25);
+            animation: fadeIn 0.5s ease-out;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+        }
+
+        .card:active {
+            transform: scale(0.99);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            min-width: 50px;
+            min-height: 50px;
+            background: rgba(66, 153, 225, 0.15);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 1.5rem;
+            transition: var(--transition);
+            border: 1px solid rgba(66, 153, 225, 0.25);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-light);
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        /* Form Elements - Mobile Optimized */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--primary-light);
+            font-size: 0.875rem;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(66, 153, 225, 0.3);
+            border-radius: 10px;
+            color: var(--light);
+            padding: 0.875rem 1rem;
+            font-size: 1rem;
+            transition: var(--transition);
+            font-family: 'Inter', sans-serif;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.2);
+            background: rgba(0, 0, 0, 0.35);
+        }
+
+        input::placeholder, select::placeholder, textarea::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Buttons - Mobile Optimized */
+        .btn-group {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            width: 100%;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            white-space: nowrap;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn i {
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
+        }
+
+        .btn-amazon {
+            background: linear-gradient(135deg, var(--amazon), var(--amazon-dark));
+            color: white;
+            box-shadow: 0 4px 12px rgba(255, 153, 0, 0.3);
+        }
+
+        .btn-paypal {
+            background: linear-gradient(135deg, var(--paypal), var(--paypal-dark));
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 48, 135, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), var(--success-dark));
+            color: white;
+            box-shadow: 0 4px 12px rgba(56, 161, 105, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--light);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--error), var(--error-dark));
+            color: white;
+            box-shadow: 0 4px 12px rgba(229, 62, 62, 0.3);
+        }
+
+        .btn-sm {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        .btn-xs {
+            padding: 0.375rem 0.5rem;
+            font-size: 0.7rem;
+            gap: 0.25rem;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Admin Section - Mobile Optimized */
+        .admin-section {
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+
+        .admin-visible .admin-section {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        /* Tables - Mobile Optimized */
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border-radius: 12px;
+            border: 1px solid rgba(66, 153, 225, 0.2);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            margin-top: 1rem;
+            background: rgba(0, 0, 0, 0.25);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: transparent;
+            min-width: 600px; /* Para scroll horizontal en móviles */
+        }
+
+        .data-table th {
+            text-align: left;
+            padding: 0.75rem;
+            background: rgba(66, 153, 225, 0.15);
+            color: var(--primary-light);
+            font-weight: 700;
+            font-size: 0.75rem;
+            border-bottom: 2px solid var(--primary);
+            white-space: nowrap;
+        }
+
+        .data-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid rgba(66, 153, 225, 0.15);
+            color: var(--light);
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table tr:active td {
+            background: rgba(66, 153, 225, 0.08);
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 0.25rem;
+            flex-wrap: wrap;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: inline-block;
+        }
+
+        .status-active {
+            background: rgba(56, 161, 105, 0.2);
+            color: var(--success-light);
+            border-color: var(--success);
+        }
+
+        .status-inactive {
+            background: rgba(237, 137, 54, 0.2);
+            color: var(--warning-light);
+            border-color: var(--warning);
+        }
+
+        .status-admin {
+            background: rgba(229, 62, 62, 0.2);
+            color: var(--error-light);
+            border-color: var(--error);
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: rgba(255, 255, 255, 0.5);
+            font-style: italic;
+            font-size: 0.875rem;
+        }
+
+        /* Key styles - Mobile Optimized */
+        .key-display {
+            font-family: 'Courier New', monospace;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 0.375rem 0.75rem;
+            border-radius: 6px;
+            border: 1px solid var(--primary);
+            font-weight: 600;
+            color: var(--primary-light);
+            font-size: 0.7rem;
+            word-break: break-all;
+            max-width: 150px;
+        }
+
+        .copy-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .copy-btn:active {
+            transform: scale(0.9);
+        }
+
+        /* Modal - Mobile Optimized */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            align-items: flex-start;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1rem;
+            padding-top: calc(2rem + var(--safe-top));
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .modal {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            border: 1px solid var(--primary);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-light);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--gray);
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .modal-close:active {
+            background: rgba(66, 153, 225, 0.1);
+        }
+
+        /* Footer - Mobile Optimized */
+        .app-footer {
+            text-align: center;
+            padding-top: 1.5rem;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.75rem;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .heart-icon {
+            color: var(--error);
+            display: inline-block;
+            animation: pulse 1.5s infinite;
+            margin: 0 0.25rem;
+        }
+
+        .app-footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        /* Responsive adjustments */
+        @media (min-width: 640px) {
+            .app-container {
+                padding: 1.5rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 1rem;
+            }
+            
+            .main-content {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1.5rem;
+            }
+            
+            .nav-buttons {
+                grid-template-columns: repeat(3, auto);
+                gap: 0.75rem;
+            }
+            
+            .btn {
+                padding: 0.875rem 1.25rem;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .app-container {
+                max-width: 1200px;
+                padding: 2rem;
+            }
+            
+            .app-logo {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+            
+            .user-info {
+                flex-direction: row;
+                align-items: center;
+            }
+            
+            .nav-buttons {
+                width: auto;
+            }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+            border-radius: 3px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, var(--primary-dark), var(--info-dark));
+        }
+
+        /* Selection */
+        ::selection {
+            background: rgba(66, 153, 225, 0.3);
+            color: white;
+        }
+
+        /* Prevent text size adjustment on orientation change */
+        html {
+            -webkit-text-size-adjust: 100%;
+        }
+
+        /* Better touch targets */
+        button, 
+        input[type="button"], 
+        input[type="submit"], 
+        input[type="reset"],
+        a.btn {
+            min-height: 44px;
+            min-width: 44px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="app-logo">
+                <div class="app-logo-left">
+                    <div class="app-logo-icon">
+                        <i class="fas fa-tachometer-alt"></i>
+                    </div>
+                    <div class="app-title">
+                        <h1>Dashboard</h1>
+                        <p id="userRoleText">Panel de control</p>
+                    </div>
+                </div>
+                <div class="user-info">
+                    <div class="user-stats-row">
+                        <div class="user-credits">
+                            <i class="fas fa-coins"></i>
+                            <span id="creditsCount"><?php echo $userData['credits'] ?? 0; ?></span>
+                        </div>
+                        <div id="userBadge" class="<?php echo $isAdmin ? 'admin-badge' : 'user-badge'; ?>">
+                            <i class="fas fa-<?php echo $isAdmin ? 'crown' : 'user'; ?>"></i>
+                            <span id="badgeText"><?php echo $isAdmin ? 'Admin' : 'Usuario'; ?></span>
+                        </div>
+                    </div>
+                    <div class="nav-buttons">
+                        <a href="index.html" class="btn btn-amazon">
+                            <i class="fab fa-amazon"></i>
+                            <span>AMAZON</span>
+                        </a>
+                        <a href="gatepaypal.html" class="btn btn-paypal">
+                            <i class="fab fa-paypal"></i>
+                            <span>PAYPAL</span>
+                        </a>
+                        <button id="logoutBtn" class="btn btn-danger">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>SALIR</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- SECCIÓN PARA TODOS LOS USUARIOS -->
+        <div class="stats-grid">
+            <div class="stat-card credits">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value" id="currentCredits"><?php echo $userData['credits'] ?? 0; ?></div>
+                        <div class="stat-label">Créditos</div>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                </div>
+                <div class="stat-change" id="creditsStatus">Disponibles</div>
+            </div>
+
+            <div class="stat-card used">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value" id="usedCredits"><?php echo $usedCredits; ?></div>
+                        <div class="stat-label">Usados</div>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+                <div class="stat-change positive" id="usedStatus">Total</div>
+            </div>
+
+            <div class="stat-card available">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value" id="availableChecks"><?php echo $userData['credits'] ?? 0; ?></div>
+                        <div class="stat-label">Verificaciones</div>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-play-circle"></i>
+                    </div>
+                </div>
+                <div class="stat-change positive" id="availableStatus">Disponibles</div>
+            </div>
+
+            <div class="stat-card history">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value" id="totalChecks"><?php echo $totalChecks; ?></div>
+                        <div class="stat-label">Historial</div>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                </div>
+                <div class="stat-change positive" id="historyStatus">Realizadas</div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- TARJETA DE RECARGA -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-key"></i>
+                    </div>
+                    <h3 class="card-title">Recargar Créditos</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="creditKey" class="form-label">Key de Recarga</label>
+                        <input type="text" id="creditKey" placeholder="CK-ABC123DEF456" maxlength="50">
+                        <div style="font-size: 0.75rem; color: var(--primary-light); margin-top: 0.5rem;">
+                            Obtén keys del administrador
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <button id="redeemBtn" class="btn btn-success">
+                            <i class="fas fa-gift"></i>
+                            <span>Canjear</span>
+                        </button>
+                        <button id="clearKeyBtn" class="btn btn-secondary">
+                            <i class="fas fa-times"></i>
+                            <span>Limpiar</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TARJETA DE ACTIVIDAD -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <h3 class="card-title">Actividad Reciente</h3>
+                    <div class="card-actions">
+                        <button id="refreshBtn" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Key</th>
+                                    <th>Créditos</th>
+                                    <th>Fecha</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activityTable">
+                                <tr>
+                                    <td colspan="4" class="empty-message">Cargando...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN SOLO PARA ADMINISTRADORES -->
+        <?php if ($isAdmin): ?>
+        <div class="admin-section">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <h3 class="card-title">Panel Admin</h3>
+                    <div class="card-actions">
+                        <button id="adminRefreshBtn" class="btn btn-primary btn-sm">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div style="margin-bottom: 1.5rem;">
+                        <h4 style="color: var(--primary-light); margin-bottom: 0.75rem; font-size: 1rem;">Generar Keys</h4>
+                        <div class="form-group">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+                                <div>
+                                    <label style="display: block; margin-bottom: 0.25rem; font-size: 0.75rem; color: var(--primary-light);">Créditos</label>
+                                    <input type="number" id="keyCredits" placeholder="1000" min="100" max="100000" value="1000">
+                                </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 0.25rem; font-size: 0.75rem; color: var(--primary-light);">Días</label>
+                                    <input type="number" id="keyExpiry" placeholder="30" min="1" max="365" value="30">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="btn-group">
+                            <button id="generateKeyBtn" class="btn btn-success">
+                                <i class="fas fa-plus"></i>
+                                <span>Generar</span>
+                            </button>
+                            <button id="generateMultipleBtn" class="btn btn-primary">
+                                <i class="fas fa-layer-group"></i>
+                                <span>Múltiples</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem;">
+                        <h4 style="color: var(--primary-light); margin-bottom: 0.75rem; font-size: 1rem;">Keys Generadas</h4>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Key</th>
+                                        <th>Créditos</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="keysTable">
+                                    <tr>
+                                        <td colspan="4" class="empty-message">Cargando keys...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 style="color: var(--primary-light); margin-bottom: 0.75rem; font-size: 1rem;">Usuarios</h4>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Usuario</th>
+                                        <th>Email</th>
+                                        <th>Créditos</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTable">
+                                    <tr>
+                                        <td colspan="4" class="empty-message">Cargando usuarios...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <footer class="app-footer">
+            <p>
+                Desarrollado con <i class="fas fa-heart heart-icon"></i> por 
+                <a href="#" target="_blank">GOKU-CHECKER</a>
+            </p>
+        </footer>
+    </div>
+
+    <!-- Modal para editar usuario -->
+    <div id="editUserModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Editar Usuario</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="editUsername" class="form-label">Usuario</label>
+                    <input type="text" id="editUsername" placeholder="Nombre de usuario">
+                </div>
+                <div class="form-group">
+                    <label for="editEmail" class="form-label">Email</label>
+                    <input type="email" id="editEmail" placeholder="Correo electrónico">
+                </div>
+                <div class="form-group">
+                    <label for="editCredits" class="form-label">Créditos</label>
+                    <input type="number" id="editCredits" placeholder="Créditos" min="0" max="1000000">
+                </div>
+                <div class="form-group">
+                    <label for="editIsAdmin" class="form-label">Rol</label>
+                    <select id="editIsAdmin">
+                        <option value="0">Usuario</option>
+                        <option value="1">Administrador</option>
+                    </select>
+                </div>
+                <input type="hidden" id="editUserId">
+                <div class="btn-group" style="margin-top: 1.5rem;">
+                    <button id="saveUserBtn" class="btn btn-success">
+                        <i class="fas fa-save"></i>
+                        <span>Guardar</span>
+                    </button>
+                    <button id="cancelEditBtn" class="btn btn-secondary">
+                        <i class="fas fa-times"></i>
+                        <span>Cancelar</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
+    
+    <script>
+        // DATOS INICIALES DESDE PHP
+        const initialUserData = {
+            username: '<?php echo $userData['username'] ?? ''; ?>',
+            email: '<?php echo $userData['email'] ?? ''; ?>', 
+            credits: <?php echo $userData['credits'] ?? 0; ?>,
+            is_admin: <?php echo $isAdmin ? 'true' : 'false'; ?>,
+            used_credits: <?php echo $usedCredits; ?>,
+            total_checks: <?php echo $totalChecks; ?>
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elementos de la interfaz
+            const creditsCount = document.getElementById('creditsCount');
+            const currentCredits = document.getElementById('currentCredits');
+            const usedCredits = document.getElementById('usedCredits');
+            const availableChecks = document.getElementById('availableChecks');
+            const totalChecks = document.getElementById('totalChecks');
+            const creditKey = document.getElementById('creditKey');
+            const redeemBtn = document.getElementById('redeemBtn');
+            const clearKeyBtn = document.getElementById('clearKeyBtn');
+            const refreshBtn = document.getElementById('refreshBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const activityTable = document.getElementById('activityTable');
+            
+            // Elementos de admin
+            const keyCredits = document.getElementById('keyCredits');
+            const keyExpiry = document.getElementById('keyExpiry');
+            const generateKeyBtn = document.getElementById('generateKeyBtn');
+            const generateMultipleBtn = document.getElementById('generateMultipleBtn');
+            const adminRefreshBtn = document.getElementById('adminRefreshBtn');
+            const keysTable = document.getElementById('keysTable');
+            const usersTable = document.getElementById('usersTable');
+            
+            // Elementos del modal
+            const editUserModal = document.getElementById('editUserModal');
+            const modalClose = editUserModal.querySelector('.modal-close');
+            const cancelEditBtn = document.getElementById('cancelEditBtn');
+            const saveUserBtn = document.getElementById('saveUserBtn');
+            const editUserId = document.getElementById('editUserId');
+            const editUsername = document.getElementById('editUsername');
+            const editEmail = document.getElementById('editEmail');
+            const editCredits = document.getElementById('editCredits');
+            const editIsAdmin = document.getElementById('editIsAdmin');
+
+            // Mostrar sección de admin si corresponde
+            if (initialUserData.is_admin) {
+                document.body.classList.add('admin-visible');
+            }
+
+            // Actualizar estado de créditos
+            updateCreditsStatus(initialUserData.credits);
+
+            // Cargar datos iniciales
+            loadUserActivity();
+
+            // Si es admin, cargar datos administrativos
+            if (initialUserData.is_admin) {
+                loadAdminData();
+            }
+
+            // Event Listeners
+            redeemBtn.addEventListener('click', redeemCreditKey);
+            clearKeyBtn.addEventListener('click', () => creditKey.value = '');
+            refreshBtn.addEventListener('click', refreshUserData);
+            logoutBtn.addEventListener('click', logoutUser);
+
+            if (initialUserData.is_admin) {
+                generateKeyBtn.addEventListener('click', generateCreditKey);
+                generateMultipleBtn.addEventListener('click', generateMultipleKeys);
+                adminRefreshBtn.addEventListener('click', refreshAdminData);
+            }
+
+            // Modal events
+            modalClose.addEventListener('click', closeModal);
+            cancelEditBtn.addEventListener('click', closeModal);
+            saveUserBtn.addEventListener('click', saveUserChanges);
+
+            // Cerrar modal al hacer clic fuera
+            editUserModal.addEventListener('click', (e) => {
+                if (e.target === editUserModal) {
+                    closeModal();
+                }
+            });
+
+            // Permitir canjear con Enter
+            creditKey.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    redeemCreditKey();
+                }
+            });
+
+            // Prevenir zoom en inputs
+            document.addEventListener('touchstart', function(event) {
+                if (event.target.tagName === 'INPUT' || event.target.tagName === 'SELECT' || event.target.tagName === 'TEXTAREA') {
+                    event.target.style.fontSize = '16px';
+                }
+            });
+
+            // Funciones principales
+            function updateCreditsStatus(credits) {
+                const creditsStatus = document.getElementById('creditsStatus');
+                
+                if (credits <= 0) {
+                    creditsStatus.textContent = 'Sin créditos';
+                    creditsStatus.className = 'stat-change negative';
+                } else if (credits < 10) {
+                    creditsStatus.textContent = 'Bajos';
+                    creditsStatus.className = 'stat-change warning';
+                } else {
+                    creditsStatus.textContent = 'Disponibles';
+                    creditsStatus.className = 'stat-change positive';
+                }
+            }
+
+            function loadUserActivity() {
+                fetch('auth.php?action=get_user_stats')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            if (data.recent_keys) {
+                                updateActivityTable(data.recent_keys);
+                            }
+                            
+                            // Actualizar estadísticas si vienen en la respuesta
+                            if (data.used_credits !== undefined) {
+                                document.getElementById('usedCredits').textContent = data.used_credits;
+                            }
+                            if (data.total_checks !== undefined) {
+                                document.getElementById('totalChecks').textContent = data.total_checks;
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading user activity:', error);
+                    });
+            }
+
+            function updateActivityTable(activities) {
+                if (!activities || activities.length === 0) {
+                    activityTable.innerHTML = '<tr><td colspan="4" class="empty-message">No hay actividad</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                activities.forEach(activity => {
+                    // Para actividad de usuario, mostrar key censurada
+                    const maskedKey = activity.credit_key ? 
+                        activity.credit_key.substring(0, 6) + '***' + activity.credit_key.substring(activity.credit_key.length - 4) : 
+                        'N/A';
+                    
+                    const date = activity.used_at ? formatDateMobile(activity.used_at) : 'N/A';
+                    
+                    html += `
+                        <tr>
+                            <td style="font-size: 0.7rem;">${maskedKey}</td>
+                            <td style="color: var(--success-light); font-weight: 600; font-size: 0.7rem;">+${activity.credits_amount || 0}</td>
+                            <td style="font-size: 0.7rem;">${date}</td>
+                            <td><span class="status-badge status-active">✓</span></td>
+                        </tr>
+                    `;
+                });
+
+                activityTable.innerHTML = html;
+            }
+
+            function redeemCreditKey() {
+                const key = creditKey.value.trim();
+                
+                if (!key) {
+                    showToast('error', 'Ingresa una key', '#e53e3e');
+                    return;
+                }
+
+                redeemBtn.disabled = true;
+                redeemBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>...</span>';
+
+                const formData = new FormData();
+                formData.append('credit_key', key);
+
+                fetch('auth.php?action=redeem_key', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast('success', data.message, '#38a169');
+                        creditKey.value = '';
+                        
+                        // Actualizar créditos en la interfaz
+                        const newBalance = data.new_balance;
+                        creditsCount.textContent = newBalance;
+                        currentCredits.textContent = newBalance;
+                        availableChecks.textContent = newBalance;
+                        initialUserData.credits = newBalance;
+                        
+                        updateCreditsStatus(newBalance);
+                        loadUserActivity();
+                        
+                        // Actualizar créditos usados si vienen en la respuesta
+                        if (data.used_credits !== undefined) {
+                            document.getElementById('usedCredits').textContent = data.used_credits;
+                        }
+                    } else {
+                        showToast('error', data.message, '#e53e3e');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error redeeming key:', error);
+                    showToast('error', 'Error al procesar', '#e53e3e');
+                })
+                .finally(() => {
+                    redeemBtn.disabled = false;
+                    redeemBtn.innerHTML = '<i class="fas fa-gift"></i><span>Canjear</span>';
+                });
+            }
+
+            function refreshUserData() {
+                refreshBtn.disabled = true;
+                refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+                Promise.all([
+                    fetch('auth.php?action=check_session').then(r => r.json()),
+                    fetch('auth.php?action=get_user_stats').then(r => r.json())
+                ])
+                .then(([sessionData, statsData]) => {
+                    if (sessionData.success) {
+                        const userCredits = sessionData.user.credits;
+                        creditsCount.textContent = userCredits;
+                        currentCredits.textContent = userCredits;
+                        availableChecks.textContent = userCredits;
+                        initialUserData.credits = userCredits;
+                        updateCreditsStatus(userCredits);
+                    }
+                    
+                    if (statsData.success) {
+                        if (statsData.used_credits !== undefined) {
+                            document.getElementById('usedCredits').textContent = statsData.used_credits;
+                        }
+                        if (statsData.total_checks !== undefined) {
+                            document.getElementById('totalChecks').textContent = statsData.total_checks;
+                        }
+                        
+                        if (statsData.recent_keys) {
+                            updateActivityTable(statsData.recent_keys);
+                        }
+                    }
+                    
+                    showToast('success', 'Actualizado', '#38a169');
+                })
+                .catch(error => {
+                    console.error('Error refreshing data:', error);
+                    showToast('error', 'Error al actualizar', '#e53e3e');
+                })
+                .finally(() => {
+                    refreshBtn.disabled = false;
+                    refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i>';
+                });
+            }
+
+            function logoutUser() {
+                Swal.fire({
+                    title: 'Cerrar Sesión',
+                    text: '¿Estás seguro?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#4299e1',
+                    cancelButtonColor: '#718096',
+                    confirmButtonText: 'Sí',
+                    cancelButtonText: 'No',
+                    background: '#1a202c',
+                    color: '#ffffff',
+                    customClass: {
+                        container: 'mobile-swal'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch('auth.php?action=logout')
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    window.location.href = 'login.html';
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error logging out:', error);
+                                window.location.href = 'login.html';
+                            });
+                    }
+                });
+            }
+
+            // Funciones de administrador
+            function loadAdminData() {
+                loadRecentKeys();
+                loadUsers();
+            }
+
+            function loadRecentKeys() {
+                fetch('auth.php?action=get_credit_keys')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            updateKeysTable(data.keys);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading keys:', error);
+                        showToast('error', 'Error cargando keys', '#e53e3e');
+                        keysTable.innerHTML = '<tr><td colspan="4" class="empty-message">Error</td></tr>';
+                    });
+            }
+
+            function loadUsers() {
+                fetch('auth.php?action=get_users')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            updateUsersTable(data.users);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading users:', error);
+                        showToast('error', 'Error cargando usuarios', '#e53e3e');
+                        usersTable.innerHTML = '<tr><td colspan="4" class="empty-message">Error</td></tr>';
+                    });
+            }
+
+            function updateKeysTable(keys) {
+                if (!keys || keys.length === 0) {
+                    keysTable.innerHTML = '<tr><td colspan="4" class="empty-message">No hay keys</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                keys.forEach(key => {
+                    const statusClass = key.is_used ? 'status-inactive' : 'status-active';
+                    const statusText = key.is_used ? 'Usada' : 'Activa';
+                    const usedBy = key.used_by_username ? `por ${key.used_by_username}` : '';
+                    
+                    html += `
+                        <tr>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 0.25rem; flex-wrap: wrap;">
+                                    <span class="key-display">${key.credit_key || 'N/A'}</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('${key.credit_key}')" title="Copiar">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                                ${usedBy ? `<div style="font-size: 0.6rem; color: var(--gray); margin-top: 0.125rem;">${usedBy}</div>` : ''}
+                            </td>
+                            <td style="color: var(--primary-light); font-weight: 600; font-size: 0.7rem;">${key.credits_amount || 0}</td>
+                            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                            <td>
+                                <div class="table-actions">
+                                    <button onclick="deleteKey('${key.credit_key}')" class="btn btn-danger btn-xs">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                keysTable.innerHTML = html;
+            }
+
+            function updateUsersTable(users) {
+                if (!users || users.length === 0) {
+                    usersTable.innerHTML = '<tr><td colspan="4" class="empty-message">No hay usuarios</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                users.forEach(user => {
+                    const role = user.is_admin ? 'Admin' : 'User';
+                    const roleClass = user.is_admin ? 'status-admin' : 'status-active';
+                    const creditColor = user.credits === 0 ? 'var(--error-light)' : 
+                                      user.credits < 10 ? 'var(--warning-light)' : 'var(--success-light)';
+                    
+                    // Mostrar email abreviado para móviles
+                    const shortEmail = user.email.length > 15 ? user.email.substring(0, 12) + '...' : user.email;
+                    
+                    html += `
+                        <tr>
+                            <td style="font-weight: 600; font-size: 0.7rem;">${user.username}</td>
+                            <td style="font-size: 0.7rem;" title="${user.email}">${shortEmail}</td>
+                            <td style="color: ${creditColor}; font-weight: 600; font-size: 0.7rem;">${user.credits}</td>
+                            <td>
+                                <div class="table-actions">
+                                    <button onclick="editUser(${user.id}, '${user.username}', '${user.email}', ${user.credits}, ${user.is_admin})" class="btn btn-secondary btn-xs">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="resetPassword(${user.id})" class="btn btn-primary btn-xs">
+                                        <i class="fas fa-key"></i>
+                                    </button>
+                                    <button onclick="deleteUser(${user.id})" class="btn btn-danger btn-xs">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                usersTable.innerHTML = html;
+            }
+
+            window.editUser = function(id, username, email, credits, isAdmin) {
+                editUserId.value = id;
+                editUsername.value = username;
+                editEmail.value = email;
+                editCredits.value = credits;
+                editIsAdmin.value = isAdmin ? '1' : '0';
+                
+                editUserModal.style.display = 'flex';
+            }
+
+            function saveUserChanges() {
+                const userId = editUserId.value;
+                const username = editUsername.value.trim();
+                const email = editEmail.value.trim();
+                const credits = parseInt(editCredits.value);
+                const isAdmin = editIsAdmin.value === '1';
+
+                if (!username || !email) {
+                    showToast('error', 'Completa todos los campos', '#e53e3e');
+                    return;
+                }
+
+                saveUserBtn.disabled = true;
+                saveUserBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>...</span>';
+
+                const formData = new FormData();
+                formData.append('user_id', userId);
+                formData.append('username', username);
+                formData.append('email', email);
+                formData.append('credits', credits);
+                formData.append('is_admin', isAdmin ? '1' : '0');
+
+                fetch('auth.php?action=update_user', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast('success', data.message, '#38a169');
+                        closeModal();
+                        loadUsers();
+                        
+                        // Si es el usuario actual, actualizar datos
+                        if (parseInt(userId) === parseInt(<?php echo $user_id; ?>)) {
+                            refreshUserData();
+                        }
+                    } else {
+                        showToast('error', data.message, '#e53e3e');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating user:', error);
+                    showToast('error', 'Error al guardar', '#e53e3e');
+                })
+                .finally(() => {
+                    saveUserBtn.disabled = false;
+                    saveUserBtn.innerHTML = '<i class="fas fa-save"></i><span>Guardar</span>';
+                });
+            }
+
+            window.resetPassword = function(userId) {
+                Swal.fire({
+                    title: 'Resetear Contraseña',
+                    text: '¿Estás seguro?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#4299e1',
+                    cancelButtonColor: '#718096',
+                    confirmButtonText: 'Sí',
+                    cancelButtonText: 'No',
+                    background: '#1a202c',
+                    color: '#ffffff',
+                    customClass: {
+                        container: 'mobile-swal'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const formData = new FormData();
+                        formData.append('user_id', userId);
+
+                        fetch('auth.php?action=reset_password', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                showToast('success', data.message, '#38a169');
+                            } else {
+                                showToast('error', data.message, '#e53e3e');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error resetting password:', error);
+                            showToast('error', 'Error al resetear', '#e53e3e');
+                        });
+                    }
+                });
+            }
+
+            window.deleteUser = function(userId) {
+                Swal.fire({
+                    title: 'Eliminar Usuario',
+                    text: '¿Estás seguro?',
+                    icon: 'error',
+                    showCancelButton: true,
+                    confirmButtonColor: '#EF4444',
+                    cancelButtonColor: '#718096',
+                    confirmButtonText: 'Eliminar',
+                    cancelButtonText: 'Cancelar',
+                    background: '#1a202c',
+                    color: '#ffffff',
+                    customClass: {
+                        container: 'mobile-swal'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const formData = new FormData();
+                        formData.append('user_id', userId);
+
+                        fetch('auth.php?action=delete_user', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                showToast('success', data.message, '#38a169');
+                                loadUsers();
+                            } else {
+                                showToast('error', data.message, '#e53e3e');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error deleting user:', error);
+                            showToast('error', 'Error al eliminar', '#e53e3e');
+                        });
+                    }
+                });
+            }
+
+            function closeModal() {
+                editUserModal.style.display = 'none';
+                editUserId.value = '';
+                editUsername.value = '';
+                editEmail.value = '';
+                editCredits.value = '';
+                editIsAdmin.value = '0';
+            }
+
+            function generateCreditKey() {
+                const credits = parseInt(keyCredits.value);
+                const expiryDays = parseInt(keyExpiry.value);
+
+                if (!credits || credits < 100) {
+                    showToast('error', 'Mínimo 100 créditos', '#e53e3e');
+                    return;
+                }
+
+                generateKeyBtn.disabled = true;
+                generateKeyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>...</span>';
+
+                const formData = new FormData();
+                formData.append('credits_amount', credits);
+                formData.append('expiry_days', expiryDays);
+
+                fetch('auth.php?action=create_credit_key', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast('success', 'Key generada', '#38a169');
+                        keyCredits.value = '';
+                        loadRecentKeys();
+                        
+                        // Mostrar la key completa
+                        Swal.fire({
+                            title: 'Key Generada',
+                            html: `
+                                <div style="text-align: center;">
+                                    <div style="background: rgba(0,0,0,0.5); padding: 1rem; border-radius: 8px; margin: 1rem 0; border: 1px solid var(--primary); word-break: break-all;">
+                                        <code style="font-size: 0.9rem; color: var(--primary-light);">${data.credit_key}</code>
+                                    </div>
+                                    <p style="font-size: 0.8rem; color: var(--gray);">Copia esta key</p>
+                                </div>
+                            `,
+                            icon: 'success',
+                            showCancelButton: true,
+                            confirmButtonText: 'Copiar',
+                            cancelButtonText: 'Cerrar',
+                            confirmButtonColor: '#4299e1',
+                            cancelButtonColor: '#718096',
+                            background: '#1a202c',
+                            color: '#ffffff',
+                            customClass: {
+                                container: 'mobile-swal'
+                            }
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                copyToClipboard(data.credit_key);
+                                showToast('success', 'Copiada', '#38a169');
+                            }
+                        });
+                    } else {
+                        showToast('error', data.message, '#e53e3e');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error generating key:', error);
+                    showToast('error', 'Error al generar', '#e53e3e');
+                })
+                .finally(() => {
+                    generateKeyBtn.disabled = false;
+                    generateKeyBtn.innerHTML = '<i class="fas fa-plus"></i><span>Generar</span>';
+                });
+            }
+
+            function generateMultipleKeys() {
+                showToast('info', 'Próximamente', '#4299e1');
+            }
+
+            function refreshAdminData() {
+                loadRecentKeys();
+                loadUsers();
+                showToast('success', 'Actualizado', '#38a169');
+            }
+
+            // Utilidades
+            function formatDateMobile(dateString) {
+                if (!dateString) return 'N/A';
+                const date = new Date(dateString);
+                return date.toLocaleDateString('es-ES', { 
+                    day: '2-digit', 
+                    month: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+
+            function showToast(icon, message, color = '#4299e1') {
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true,
+                    background: '#1a202c',
+                    color: '#ffffff',
+                    customClass: {
+                        container: 'mobile-toast'
+                    }
+                });
+                
+                Toast.fire({
+                    icon: icon,
+                    title: message,
+                    iconColor: color
+                });
+            }
+
+            // Función para copiar al portapapeles
+            window.copyToClipboard = function(text) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('success', 'Copiado', '#38a169');
+                }).catch(err => {
+                    console.error('Error al copiar:', err);
+                    showToast('error', 'Error al copiar', '#e53e3e');
+                });
+            };
+
+            window.deleteKey = function(key) {
+                Swal.fire({
+                    title: '¿Eliminar Key?',
+                    text: 'Esta acción no se puede deshacer',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#EF4444',
+                    cancelButtonColor: '#718096',
+                    confirmButtonText: 'Eliminar',
+                    cancelButtonText: 'Cancelar',
+                    background: '#1a202c',
+                    color: '#ffffff',
+                    customClass: {
+                        container: 'mobile-swal'
+                    }
+                }).then(async (result) => {
+                    if (result.isConfirmed) {
+                        try {
+                            const formData = new FormData();
+                            formData.append('key', key);
+
+                            const response = await fetch('auth.php?action=delete_key', {
+                                method: 'POST',
+                                body: formData
+                            });
+
+                            const data = await response.json();
+
+                            if (data.success) {
+                                showToast('success', 'Key eliminada', '#38a169');
+                                loadRecentKeys();
+                            } else {
+                                showToast('error', data.message || 'Error', '#e53e3e');
+                            }
+                        } catch (error) {
+                            console.error('Error eliminando key:', error);
+                            showToast('error', 'Error de conexión', '#e53e3e');
+                        }
+                    }
+                });
+            };
+        });
+    </script>
+</body>
+</html>
