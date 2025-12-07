@@ -960,9 +960,9 @@ if ($db) {
                         <a href="gatepaypal.html" class="btn btn-paypal">
                             <i class="fab fa-paypal"></i>
                             <span>PAYPAL</span>
-                            <div class="nav-buttons">
+                           
                         <a href="index3.html" class="btn btn-stripe">
-                            <i class="fab fa-amazon"></i>
+                            <i class="fab fa-stripe"></i>
                             <span>GATE STRIPE</span>
                         </a>
                         <button id="logoutBtn" class="btn btn-danger">
