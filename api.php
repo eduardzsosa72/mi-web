@@ -144,7 +144,36 @@ function multiexplode($delimiters, $string) {
 
 // Lista de proxies a utilizar
 $proxies = [
-    'http://USER:PASS@gw.dataimpulse.com:823'
+    'https://190.104.146.244:999',
+    'https://140.246.149.224:8888',
+    'https://101.255.94.161:8080',
+    'https://117.2.28.235:55443',
+    'https://27.72.28.32:8008',
+    'https://131.196.114.9:6969',
+    'https://202.141.233.166:48995',
+    'https://47.112.102.20:80',
+    'https://13.125.194.158:10040',
+    'https://187.190.118.141:999',
+    'https://20.47.108.204:8888',
+    'https://47.115.6.196:3389',
+    'https://101.51.197.149:8080',
+    'https://200.85.42.194:999',
+    'https://125.162.75.248:8080',
+    'https://183.87.158.141:8080',
+    'https://118.71.225.130:4001',
+    'http://78.36.198.158:80',
+    'https://103.52.210.237:80',
+    'http://177.234.172.30:3128',
+    'https://118.99.103.228:8080',
+    'http://202.83.173.114:8080',
+    'https://36.65.38.142:8080',
+    'http://128.199.202.122:3128',
+    'https://47.100.14.22:9006',
+    'http://198.199.86.11:3128',
+    'https://103.47.238.157:55243',
+    'http://182.72.150.242:8080',
+    'https://186.101.48.195:83',
+    'http://209.97.150.167:8080'
 ];
 
 // Simulamos que los valores de tarjeta de crédito vienen en una cadena de parámetros GET para dividirlos
@@ -286,19 +315,19 @@ list($step_1, $httpCode) = $Guzzle->performGuzzleRequest(
     null,
     [],
     5,
-    false, // Usar proxy
+    false, 
     false
 );
 
 $AccessToken = $Guzzle->capture($step_1, 'facilitatorAccessToken":"','"');
-// echo "<li>AccessToken: $AccessToken<li>";
+ echo "<li>AccessToken: $AccessToken<li>";
 
 $amount = random_int(5, 15);
 $cents = random_int(1, 99);
 $price = "$amount.$cents";
-// echo $amo = json_encode([
-//     'Price' => $price
-// ]);
+echo $amo = json_encode([
+     'Price' => $price
+ ]);
 
 $postdata = [
     "purchase_units" => [
@@ -343,7 +372,7 @@ list($step_2, $httpCode) = $Guzzle->performGuzzleRequest(
 );
 
 $id = $Guzzle->capture($step_2, '"id":"','"');
-// echo "<li>id: $id<li>";
+ echo "<li>id: $id<li>";
 
 $postdata = [
     "query" => "
