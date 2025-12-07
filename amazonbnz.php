@@ -18,7 +18,7 @@ $lista = str_replace(array(" "), '/', $_POST['lista']);
 $regex = str_replace(array(':',";","|",",","=>","-"," ",'/','|||'), "|", $lista);
 
 if (!preg_match("/[0-9]{15,16}\|[0-9]{2}\|[0-9]{2,4}\|[0-9]{3,4}/", $regex,$lista)){
-    die('<span class="text-danger">Declined</span> ➔ <span class="text-white">'.$lista.'</span> ➔ <span class="text-danger"> Lista inválida. </span> ➔ <span class="text-warning"></span><br>');
+    die('<span class="text-danger">Declined</span> ➔ <span class="text-white">'.$lista.'</span> ➔ <span class="text-danger"> Lista inválida. </span> ➔ <span class="text-warning">gokuchk</span><br>');
 }
 
 function multiexplode($delimiters, $string)
