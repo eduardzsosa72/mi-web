@@ -1,4 +1,4 @@
-a  este es <!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -958,27 +958,36 @@ a  este es <!DOCTYPE html>
                 </div>
                 
                 <!-- Nuevos botones de sesión -->
-<div class="session-buttons" id="sessionButtons" style="display: none;">
-    <div class="user-info" id="userInfo">
-        <div class="user-avatar" id="userAvatar">U</div>
-        <span id="userName">Usuario</span>
-    </div>
-    <!-- Botón de Recargar Créditos -->
-    <button id="creditsBtn" class="btn btn-credits btn-sm">
-        <i class="fas fa-coins"></i>
-        <span>Recargar</span>
-    </button>
-    <!-- Botón de Menú -->
-    <a href="dashboard_page.php" class="btn btn-secondary btn-sm menu-button">
-        <i class="fas fa-bars"></i>
-        <span>Menú</span>
-    </a>
-    <!-- Botón de Cerrar Sesión -->
-    <button id="logoutBtn" class="btn btn-logout btn-sm">
-        <i class="fas fa-sign-out-alt"></i>
-        <span>Cerrar Sesión</span>
-    </button>
-</div>
+                <div class="session-buttons" id="sessionButtons" style="display: none;">
+                    <div class="user-info" id="userInfo">
+                        <div class="user-avatar" id="userAvatar">U</div>
+                        <span id="userName">Usuario</span>
+                    </div>
+                    <!-- Menu Button - NUEVO -->
+                    <a href="dashboard_page.php" class="menu-button">
+                        <i class="fas fa-bars"></i>
+                        <span>Menú</span>
+                    </a>
+                </div>
+                    <button id="logoutBtn" class="btn btn-logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Cerrar Sesión</span>
+                    </button>
+                </div>
+                <div class="theme-switch-wrapper">
+                    <div id="themeToggle" class="theme-switch">
+                        <i class="fas fa-sun sun-icon"></i>
+                        <i class="fas fa-moon moon-icon"></i>
+                        <div class="theme-switch-toggle">
+                            <i class="fas fa-moon"></i>
+                        </div>
+                    </div>
+                </div>
+                <button id="helpBtn" class="btn btn-secondary">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Ayuda</span>
+                </button>
+            </div>
         </header>
 
         <div class="stats-section">
