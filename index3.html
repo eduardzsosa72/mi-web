@@ -856,7 +856,7 @@
                 </div>
                 <div class="app-title">
                     <h1 class="rainbow-text-animated">GOKU-CHECKER</h1>
-                    <p>Stripe </p>
+                    <p>Stripe Checker Professional</p>
                 </div>
             </div>
             
@@ -874,7 +874,6 @@
                         <div class="user-avatar" id="userAvatar">U</div>
                         <span id="userName">Usuario</span>
                     </div>
-                    
                    
                     
                     <!-- Botón de Menú -->
@@ -890,7 +889,7 @@
                     </button>
                 </div>
                 
-        
+               
             </div>
         </header>
 
@@ -1093,6 +1092,7 @@
             let approvedCVV = [];
             let approvedCCN = [];
             let declined = [];
+            let checkInterval = null;
             let userCredits = 0;
             let hasActiveSession = false;
             let currentUser = null;
@@ -1367,7 +1367,7 @@
                 });
             }
 
-            // ✅ FUNCIÓN: Iniciar verificación
+            // ✅ FUNCIÓN: Iniciar verificación (CORREGIDA)
             function startChecking() {
                 if (isRunning) return;
                 
@@ -1414,6 +1414,9 @@
                 currentIndex = 0;
                 totalCards = cards.length;
                 
+                // Actualizar contador total
+                carregadas.textContent = totalCards;
+                
                 // Resetear contadores
                 approvedCVV = [];
                 approvedCCN = [];
@@ -1426,11 +1429,11 @@
                 
                 showToast('success', '¡Verificación iniciada!');
                 
-                // Iniciar el proceso
-                checkNext();
+                // Iniciar el proceso con un delay inicial
+                setTimeout(checkNext, 100);
             }
 
-            // ✅ FUNCIÓN: Procesar siguiente tarjeta
+            // ✅ FUNCIÓN: Procesar siguiente tarjeta (CORREGIDA)
             function checkNext() {
                 if (!isRunning || currentIndex >= totalCards) {
                     stopChecking();
@@ -1445,29 +1448,39 @@
                     return;
                 }
                 
-                // Consumir crédito y verificar
-                consumeCreditAndCheck(card);
+                // Verificar formato primero
+                if (!isValidCardFormat(card)) {
+                    handleResult(card, "Formato inválido", "declined");
+                    currentIndex++;
+                    setTimeout(checkNext, 100);
+                    return;
+                }
+                
+                // Primero consumir crédito
+                consumeCredit(card);
             }
 
-            // ✅ FUNCIÓN: Consumir crédito y verificar
-            function consumeCreditAndCheck(card) {
-                const formData = new FormData();
-                formData.append('consume', '1');
-
+            // ✅ FUNCIÓN: Consumir crédito (CORREGIDA)
+            function consumeCredit(card) {
                 fetch('auth.php?action=consume_credit', {
                     method: 'POST',
-                    body: formData
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'consume=1'
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
+                        // Actualizar créditos
                         userCredits = data.new_balance;
                         creditsCount.textContent = userCredits;
                         updateCreditsColor();
                         
-                        // Verificar tarjeta
+                        // Ahora verificar la tarjeta
                         checkCard(card);
                     } else {
+                        // Error al consumir crédito
                         Swal.fire({
                             title: 'Error',
                             text: data.message || 'Error al consumir crédito',
@@ -1485,36 +1498,35 @@
                 });
             }
 
-            // ✅ FUNCIÓN: Verificar tarjeta
+            // ✅ FUNCIÓN: Verificar tarjeta (CORREGIDA - Usando el método original)
             function checkCard(card) {
-                if (!isValidCardFormat(card)) {
-                    handleResult(card, "Formato inválido. Use: Número|Mes|Año|CVV", "declined");
-                    currentIndex++;
-                    setTimeout(checkNext, 100);
-                    return;
-                }
-                
-                // Llamada AJAX original
+                // Usar el método AJAX original del código base
                 $.ajax({
-                    url: 'chk.php?lista=' + card,
+                    url: 'chk.php?lista=' + encodeURIComponent(card),
                     type: 'GET',
                     async: true,
                     success: function(resultado) {
-                        if (resultado.match("#CVV")) {
+                        if (resultado.includes("#CVV")) {
                             handleResult(card, resultado, "cvv");
-                        } else if (resultado.match("#CCN")) {
+                        } else if (resultado.includes("#CCN")) {
                             handleResult(card, resultado, "ccn");
                         } else {
                             handleResult(card, resultado, "declined");
                         }
                         
                         currentIndex++;
-                        setTimeout(checkNext, 100);
+                        
+                        // Actualizar contador de verificados
+                        const checked = approvedCVV.length + approvedCCN.length + declined.length;
+                        total.textContent = checked;
+                        
+                        // Continuar con la siguiente tarjeta después de un delay
+                        setTimeout(checkNext, 500);
                     },
-                    error: function() {
-                        handleResult(card, "Error de conexión", "declined");
+                    error: function(xhr, status, error) {
+                        handleResult(card, "Error de conexión: " + error, "declined");
                         currentIndex++;
-                        setTimeout(checkNext, 100);
+                        setTimeout(checkNext, 500);
                     }
                 });
             }
@@ -1536,7 +1548,7 @@
                 updateCounters();
                 updateResults();
                 
-                // Remover línea procesada
+                // Remover línea procesada (método original)
                 removeLine();
             }
 
@@ -1547,22 +1559,30 @@
                 
                 const [number, month, year, cvv] = parts;
                 
+                // Validar número de tarjeta (solo dígitos, 13-19 caracteres)
                 if (!/^\d{13,19}$/.test(number.replace(/\s/g, ''))) return false;
-                if (!/^(0?[1-9]|1[0-2])$/.test(month)) return false;
+                
+                // Validar mes (01-12 o 1-12)
+                const monthNum = parseInt(month);
+                if (isNaN(monthNum) || monthNum < 1 || monthNum > 12) return false;
+                
+                // Validar año (4 dígitos, año actual o futuro)
                 if (!/^\d{4}$/.test(year)) return false;
+                const currentYear = new Date().getFullYear();
+                if (parseInt(year) < currentYear) return false;
+                
+                // Validar CVV (3-4 dígitos)
                 if (!/^\d{3,4}$/.test(cvv)) return false;
                 
                 return true;
             }
 
-            // ✅ FUNCIÓN: Remover línea procesada
+            // ✅ FUNCIÓN: Remover línea procesada (CORREGIDA - Usando método original)
             function removeLine() {
                 const lines = lista.value.split('\n');
-                if (lines.length > 1) {
-                    lines.shift();
+                if (lines.length > 0) {
+                    lines.shift(); // Eliminar primera línea
                     lista.value = lines.join('\n');
-                } else {
-                    lista.value = '';
                 }
             }
 
@@ -1571,10 +1591,6 @@
                 cLive.textContent = approvedCVV.length;
                 cWarn.textContent = approvedCCN.length;
                 cDie.textContent = declined.length;
-                
-                const checked = approvedCVV.length + approvedCCN.length + declined.length;
-                total.textContent = checked;
-                carregadas.textContent = totalCards;
                 
                 cLive2.textContent = approvedCVV.length;
                 cWarn2.textContent = approvedCCN.length;
@@ -1589,7 +1605,7 @@
                 } else {
                     let html = '';
                     approvedCVV.forEach(item => {
-                        html += `<div style="padding: 0.5rem 0; border-bottom: 1px solid var(--gray-light);">${item.card} | ${item.result}</div>`;
+                        html += `<div style="padding: 0.5rem 0; border-bottom: 1px solid var(--gray-light);">${item.result}</div>`;
                     });
                     aprovadasDiv.innerHTML = html;
                 }
@@ -1600,7 +1616,7 @@
                 } else {
                     let html = '';
                     approvedCCN.forEach(item => {
-                        html += `<div style="padding: 0.5rem 0; border-bottom: 1px solid var(--gray-light);">${item.card} | ${item.result}</div>`;
+                        html += `<div style="padding: 0.5rem 0; border-bottom: 1px solid var(--gray-light);">${item.result}</div>`;
                     });
                     edrovadasDiv.innerHTML = html;
                 }
@@ -1611,7 +1627,7 @@
                 } else {
                     let html = '';
                     declined.forEach(item => {
-                        html += `<div style="padding: 0.5rem 0; border-bottom: 1px solid var(--gray-light);">${item.card} | ${item.result}</div>`;
+                        html += `<div style="padding: 0.5rem 0; border-bottom: 1px solid var(--gray-light);">${item.result}</div>`;
                     });
                     reprovadasDiv.innerHTML = html;
                 }
@@ -1650,6 +1666,16 @@
                         
                         updateCounters();
                         updateResults();
+                        
+                        // Resetear todos los contadores
+                        cLive.textContent = '0';
+                        cWarn.textContent = '0';
+                        cDie.textContent = '0';
+                        total.textContent = '0';
+                        carregadas.textContent = '0';
+                        cLive2.textContent = '0';
+                        cWarn2.textContent = '0';
+                        cDie2.textContent = '0';
                         
                         testarBtn.disabled = false;
                         stopBtn.disabled = true;
