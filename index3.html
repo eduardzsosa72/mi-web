@@ -1,0 +1,1694 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GOKU-CHECKER - Stripe</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css">
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #4338CA;
+            --primary-light: #6366F1;
+            --primary-lighter: #EEF2FF;
+            --secondary: #06D6A0;
+            --success: #10B981;
+            --success-dark: #059669;
+            --success-light: #D1FAE5;
+            --warning: #F59E0B;
+            --warning-dark: #D97706;
+            --warning-light: #FEF3C7;
+            --error: #EF4444;
+            --error-dark: #DC2626;
+            --error-light: #FEE2E2;
+            --info: #3B82F6;
+            --info-dark: #2563EB;
+            --info-light: #DBEAFE;
+            --dark: #1F2937;
+            --darker: #111827;
+            --light: #F9FAFB;
+            --gray: #6B7280;
+            --gray-light: #E5E7EB;
+            --card-bg: #FFFFFF;
+            --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #4F46E5 0%, #3730A3 100%);
+            color: var(--dark);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        /* Header Styles */
+        .app-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 2.5rem;
+            margin-bottom: 2.5rem;
+            box-shadow: var(--card-shadow);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .app-logo {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .app-logo-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 12px 30px rgba(79, 70, 229, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .app-logo-icon::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.4), transparent);
+            transform: translateX(-100%);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            100% { transform: translateX(100%); }
+        }
+
+        .app-logo-icon i {
+            font-size: 2.5rem;
+            color: white;
+            z-index: 1;
+        }
+
+        .app-title h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.5rem;
+            letter-spacing: -1px;
+        }
+
+        .app-title p {
+            color: var(--gray);
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        /* User Actions */
+        .user-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        /* Credits Display */
+        .credits-display {
+            background: var(--primary);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: var(--transition);
+            min-width: 180px;
+        }
+
+        .credits-display:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .credits-display.no-session {
+            background: var(--error);
+        }
+
+        .credits-display.no-session:hover {
+            background: var(--error-dark);
+        }
+
+        /* User Info */
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: var(--primary-lighter);
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            min-width: 120px;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:active {
+            transform: translateY(2px);
+        }
+
+        .btn i {
+            font-size: 1rem;
+        }
+
+        .btn-credits {
+            background: linear-gradient(135deg, var(--success), var(--success-dark));
+            color: white;
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-credits:hover {
+            box-shadow: 0 12px 30px rgba(16, 185, 129, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .btn-menu {
+            background: linear-gradient(135deg, var(--info), var(--info-dark));
+            color: white;
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+            text-decoration: none;
+        }
+
+        .btn-menu:hover {
+            box-shadow: 0 12px 30px rgba(59, 130, 246, 0.4);
+            transform: translateY(-2px);
+            color: white;
+        }
+
+        .btn-logout {
+            background: linear-gradient(135deg, var(--error), var(--error-dark));
+            color: white;
+            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-logout:hover {
+            box-shadow: 0 12px 30px rgba(239, 68, 68, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .btn-help {
+            background: white;
+            color: var(--gray);
+            border: 2px solid var(--gray-light);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-help:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.2);
+        }
+
+        /* Session Buttons Container */
+        .session-buttons {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        /* Stats Section */
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        @media (max-width: 1200px) {
+            .stats-section {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .app-header {
+                flex-direction: column;
+                gap: 1.5rem;
+                text-align: center;
+            }
+            
+            .user-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .session-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .btn, .credits-display, .user-info {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-card.cvv::before {
+            background: linear-gradient(90deg, var(--success), var(--success-dark));
+        }
+
+        .stat-card.ccn::before {
+            background: linear-gradient(90deg, var(--warning), var(--warning-dark));
+        }
+
+        .stat-card.declined::before {
+            background: linear-gradient(90deg, var(--error), var(--error-dark));
+        }
+
+        .stat-card.checked::before {
+            background: linear-gradient(90deg, var(--info), var(--info-dark));
+        }
+
+        .stat-card.total::before {
+            background: linear-gradient(90deg, #8B5CF6, #7C3AED);
+        }
+
+        .stat-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 2rem;
+            position: relative;
+            transition: var(--transition);
+        }
+
+        .stat-card:hover .stat-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .stat-card.cvv .stat-icon {
+            background: var(--success-light);
+            color: var(--success);
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+        }
+
+        .stat-card.ccn .stat-icon {
+            background: var(--warning-light);
+            color: var(--warning);
+            box-shadow: 0 10px 25px rgba(245, 158, 11, 0.3);
+        }
+
+        .stat-card.declined .stat-icon {
+            background: var(--error-light);
+            color: var(--error);
+            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3);
+        }
+
+        .stat-card.checked .stat-icon {
+            background: var(--info-light);
+            color: var(--info);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+        }
+
+        .stat-card.total .stat-icon {
+            background: #EDE9FE;
+            color: #8B5CF6;
+            box-shadow: 0 10px 25px rgba(139, 92, 246, 0.3);
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            color: var(--gray);
+            margin-bottom: 1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card.cvv .stat-value {
+            background: linear-gradient(135deg, var(--success), var(--success-dark));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .stat-card.ccn .stat-value {
+            background: linear-gradient(135deg, var(--warning), var(--warning-dark));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .stat-card.declined .stat-value {
+            background: linear-gradient(135deg, var(--error), var(--error-dark));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .stat-card.checked .stat-value {
+            background: linear-gradient(135deg, var(--info), var(--info-dark));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .stat-card.total .stat-value {
+            background: linear-gradient(135deg, #8B5CF6, #7C3AED);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .stat-description {
+            color: var(--gray);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Main Card */
+        .main-card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 2.5rem;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .main-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2.5rem;
+            gap: 1.5rem;
+        }
+
+        .card-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--primary-lighter);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 2rem;
+            transition: var(--transition);
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.2);
+        }
+
+        .main-card:hover .card-icon {
+            transform: scale(1.05);
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            color: white;
+        }
+
+        .card-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 2rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 1.1rem;
+        }
+
+        textarea {
+            width: 100%;
+            background: var(--light);
+            border: 2px solid var(--gray-light);
+            border-radius: 16px;
+            color: var(--dark);
+            padding: 1.25rem 1.5rem;
+            font-size: 1rem;
+            transition: var(--transition);
+            font-family: 'Inter', sans-serif;
+            height: 200px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+            background: white;
+        }
+
+        textarea::placeholder {
+            color: var(--gray);
+            opacity: 0.7;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 1.25rem;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 1.25rem 2.5rem;
+            border-radius: 16px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            min-width: 200px;
+        }
+
+        .action-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.5s;
+        }
+
+        .action-btn:hover::before {
+            left: 100%;
+        }
+
+        .action-btn:active {
+            transform: translateY(2px);
+        }
+
+        .action-btn i {
+            font-size: 1.2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .action-btn:hover i {
+            transform: scale(1.2);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning), var(--warning-dark));
+            color: white;
+            box-shadow: 0 12px 30px rgba(245, 158, 11, 0.4);
+        }
+
+        .btn-warning:hover {
+            box-shadow: 0 16px 40px rgba(245, 158, 11, 0.6);
+            transform: translateY(-4px);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--error), var(--error-dark));
+            color: white;
+            box-shadow: 0 12px 30px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 16px 40px rgba(239, 68, 68, 0.6);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--gray);
+            border: 2px solid var(--gray-light);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.2);
+        }
+
+        .action-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .action-btn:disabled:hover::before {
+            left: -100%;
+        }
+
+        /* Results Sections */
+        .results-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .result-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+        }
+
+        .result-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            background: linear-gradient(135deg, var(--primary-lighter), white);
+            border-bottom: 1px solid var(--gray-light);
+            cursor: pointer;
+        }
+
+        .result-header.cvv {
+            border-left: 4px solid var(--success);
+        }
+
+        .result-header.ccn {
+            border-left: 4px solid var(--warning);
+        }
+
+        .result-header.declined {
+            border-left: 4px solid var(--error);
+        }
+
+        .result-title {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 1.2rem;
+        }
+
+        .result-badge {
+            background: var(--primary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .result-content {
+            padding: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .result-content.expanded {
+            padding: 2rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .result-list {
+            color: var(--dark);
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 2rem;
+            color: var(--gray);
+            font-style: italic;
+            font-size: 1rem;
+        }
+
+        /* Footer */
+        .app-footer {
+            text-align: center;
+            padding-top: 3rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1rem;
+        }
+
+        .heart-icon {
+            color: var(--error);
+            display: inline-block;
+            animation: heartbeat 1.5s infinite;
+            margin: 0 0.5rem;
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .app-footer a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+            border-bottom: 2px solid transparent;
+        }
+
+        .app-footer a:hover {
+            border-bottom-color: white;
+        }
+
+        /* Rainbow Text Animation */
+        .rainbow-text-animated {
+            background: linear-gradient(90deg, #6666ff, #0099ff, #00ff00, #ff3399, #6666ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: rainbow-animation 2s ease-in-out infinite;
+            background-size: 400% 100%;
+            font-weight: 800;
+        }
+
+        @keyframes rainbow-animation {
+            0%, 100% { background-position: 0 0; }
+            50% { background-position: 100% 0; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .app-container {
+                padding: 1rem;
+            }
+
+            .app-header {
+                padding: 1.5rem;
+            }
+
+            .app-logo {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .action-btn {
+                width: 100%;
+                min-width: auto;
+            }
+
+            .main-card {
+                padding: 2rem;
+            }
+
+            .stat-value {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- HEADER CON USUARIO Y CRÉDITOS -->
+        <header class="app-header">
+            <div class="app-logo">
+                <div class="app-logo-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="app-title">
+                    <h1 class="rainbow-text-animated">GOKU-CHECKER</h1>
+                    <p>Stripe Checker Professional</p>
+                </div>
+            </div>
+            
+            <div class="user-actions">
+                <!-- Display de Créditos (Siempre visible) -->
+                <div class="credits-display" id="userCreditsDisplay">
+                    <i class="fas fa-coins"></i>
+                    <span id="creditsCount">0</span> créditos
+                </div>
+                
+                <!-- Botones de Sesión (Visible solo con sesión) -->
+                <div class="session-buttons" id="sessionButtons" style="display: none;">
+                    <!-- Información del Usuario -->
+                    <div class="user-info" id="userInfo">
+                        <div class="user-avatar" id="userAvatar">U</div>
+                        <span id="userName">Usuario</span>
+                    </div>
+                    
+                    <!-- Botón de Recargar Créditos -->
+                    <button id="creditsBtn" class="btn btn-credits">
+                        <i class="fas fa-coins"></i>
+                        <span>Recargar</span>
+                    </button>
+                    
+                    <!-- Botón de Menú -->
+                    <a href="dashboard_page.php" class="btn btn-menu">
+                        <i class="fas fa-bars"></i>
+                        <span>Menú</span>
+                    </a>
+                    
+                    <!-- Botón de Cerrar Sesión -->
+                    <button id="logoutBtn" class="btn btn-logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Cerrar Sesión</span>
+                    </button>
+                </div>
+                
+                <!-- Botón de Ayuda -->
+                <button id="helpBtn" class="btn btn-help">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Ayuda</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- ESTADÍSTICAS -->
+        <div class="stats-section">
+            <div class="stat-card cvv">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-label">Approved CVV</div>
+                <div id="cLive" class="stat-value">0</div>
+                <div class="stat-description">Tarjetas aprobadas CVV</div>
+            </div>
+            <div class="stat-card ccn">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-label">Approve CCN</div>
+                <div id="cWarn" class="stat-value">0</div>
+                <div class="stat-description">Tarjetas aprobadas CCN</div>
+            </div>
+            <div class="stat-card declined">
+                <div class="stat-icon">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+                <div class="stat-label">Declined</div>
+                <div id="cDie" class="stat-value">0</div>
+                <div class="stat-description">Tarjetas rechazadas</div>
+            </div>
+            <div class="stat-card checked">
+                <div class="stat-icon">
+                    <i class="fas fa-spinner"></i>
+                </div>
+                <div class="stat-label">Checked</div>
+                <div id="total" class="stat-value">0</div>
+                <div class="stat-description">Verificaciones completadas</div>
+            </div>
+            <div class="stat-card total">
+                <div class="stat-icon">
+                    <i class="fas fa-credit-card"></i>
+                </div>
+                <div class="stat-label">Total</div>
+                <div id="carregadas" class="stat-value">0</div>
+                <div class="stat-description">Tarjetas en lista</div>
+            </div>
+        </div>
+
+        <!-- TARJETA PRINCIPAL -->
+        <div class="main-card">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i class="fas fa-credit-card"></i>
+                </div>
+                <h3 class="card-title">Lista de Tarjetas Stripe</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="lista" class="form-label">Ingrese las tarjetas (una por línea)</label>
+                    <textarea id="lista" placeholder="Ejemplo: 4111111111111111|12|2025|123&#10;5500000000000004|06|2026|789"></textarea>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="action-buttons">
+                    <button id="testar" class="action-btn btn-warning">
+                        <i class="fas fa-play"></i>
+                        <span>START CHECK</span>
+                    </button>
+                    <button id="stopBtn" class="action-btn btn-danger">
+                        <i class="fas fa-stop"></i>
+                        <span>STOP</span>
+                    </button>
+                    <button id="clearBtn" class="action-btn btn-secondary">
+                        <i class="fas fa-trash-alt"></i>
+                        <span>LIMPIAR TODO</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- RESULTADOS -->
+        <div class="results-container">
+            <!-- Approved CVV -->
+            <div class="result-card">
+                <div class="result-header cvv" id="headerCVV">
+                    <div class="result-title">
+                        <i class="fas fa-check-circle" style="color: var(--success);"></i>
+                        <span>Approved CVV</span>
+                        <span id="cLive2" class="result-badge">0</span>
+                    </div>
+                    <button class="btn btn-sm btn-credits" id="toggleCVV">
+                        <i class="fas fa-eye"></i>
+                        <span>Mostrar</span>
+                    </button>
+                </div>
+                <div class="result-content" id="contentCVV">
+                    <div class="result-list" id="aprovadas">
+                        <div class="empty-message">No hay tarjetas aprobadas CVV aún</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Approve CCN -->
+            <div class="result-card">
+                <div class="result-header ccn" id="headerCCN">
+                    <div class="result-title">
+                        <i class="fas fa-check-circle" style="color: var(--warning);"></i>
+                        <span>Approve CCN</span>
+                        <span id="cWarn2" class="result-badge">0</span>
+                    </div>
+                    <button class="btn btn-sm btn-warning" id="toggleCCN">
+                        <i class="fas fa-eye"></i>
+                        <span>Mostrar</span>
+                    </button>
+                </div>
+                <div class="result-content" id="contentCCN">
+                    <div class="result-list" id="edrovadas">
+                        <div class="empty-message">No hay tarjetas aprobadas CCN aún</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Declined -->
+            <div class="result-card">
+                <div class="result-header declined" id="headerDeclined">
+                    <div class="result-title">
+                        <i class="fas fa-times-circle" style="color: var(--error);"></i>
+                        <span>Declined</span>
+                        <span id="cDie2" class="result-badge">0</span>
+                    </div>
+                    <button class="btn btn-sm btn-logout" id="toggleDeclined">
+                        <i class="fas fa-eye"></i>
+                        <span>Mostrar</span>
+                    </button>
+                </div>
+                <div class="result-content" id="contentDeclined">
+                    <div class="result-list" id="reprovadas">
+                        <div class="empty-message">No hay tarjetas rechazadas aún</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="app-footer">
+            <p>
+                Desarrollado con <i class="fas fa-heart heart-icon"></i> por 
+                <span class="rainbow-text-animated">GOKU-CHECKER PRO</span>
+            </p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elementos del header
+            const userCreditsDisplay = document.getElementById('userCreditsDisplay');
+            const creditsCount = document.getElementById('creditsCount');
+            const sessionButtons = document.getElementById('sessionButtons');
+            const userInfo = document.getElementById('userInfo');
+            const userAvatar = document.getElementById('userAvatar');
+            const userName = document.getElementById('userName');
+            const creditsBtn = document.getElementById('creditsBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const helpBtn = document.getElementById('helpBtn');
+            
+            // Elementos del checker
+            const lista = document.getElementById('lista');
+            const testarBtn = document.getElementById('testar');
+            const stopBtn = document.getElementById('stopBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            
+            // Contadores
+            const cLive = document.getElementById('cLive');
+            const cWarn = document.getElementById('cWarn');
+            const cDie = document.getElementById('cDie');
+            const total = document.getElementById('total');
+            const carregadas = document.getElementById('carregadas');
+            const cLive2 = document.getElementById('cLive2');
+            const cWarn2 = document.getElementById('cWarn2');
+            const cDie2 = document.getElementById('cDie2');
+            
+            // Resultados
+            const aprovadasDiv = document.getElementById('aprovadas');
+            const edrovadasDiv = document.getElementById('edrovadas');
+            const reprovadasDiv = document.getElementById('reprovadas');
+            
+            // Toggles
+            const toggleCVV = document.getElementById('toggleCVV');
+            const toggleCCN = document.getElementById('toggleCCN');
+            const toggleDeclined = document.getElementById('toggleDeclined');
+            const contentCVV = document.getElementById('contentCVV');
+            const contentCCN = document.getElementById('contentCCN');
+            const contentDeclined = document.getElementById('contentDeclined');
+
+            // Estado de la aplicación
+            let isRunning = false;
+            let currentIndex = 0;
+            let cards = [];
+            let approvedCVV = [];
+            let approvedCCN = [];
+            let declined = [];
+            let userCredits = 0;
+            let hasActiveSession = false;
+            let currentUser = null;
+            let totalCards = 0;
+
+            // Verificar sesión al cargar
+            checkUserSession();
+
+            // Event Listeners del header
+            creditsBtn.addEventListener('click', showCreditsModal);
+            logoutBtn.addEventListener('click', logoutUser);
+            helpBtn.addEventListener('click', showHelp);
+            
+            // Event Listeners del checker
+            testarBtn.addEventListener('click', startChecking);
+            stopBtn.addEventListener('click', stopChecking);
+            clearBtn.addEventListener('click', clearAll);
+
+            // Toggle sections
+            toggleCVV.addEventListener('click', function() {
+                contentCVV.classList.toggle('expanded');
+                toggleCVV.innerHTML = contentCVV.classList.contains('expanded') ? 
+                    '<i class="fas fa-eye-slash"></i><span>Ocultar</span>' : 
+                    '<i class="fas fa-eye"></i><span>Mostrar</span>';
+            });
+
+            toggleCCN.addEventListener('click', function() {
+                contentCCN.classList.toggle('expanded');
+                toggleCCN.innerHTML = contentCCN.classList.contains('expanded') ? 
+                    '<i class="fas fa-eye-slash"></i><span>Ocultar</span>' : 
+                    '<i class="fas fa-eye"></i><span>Mostrar</span>';
+            });
+
+            toggleDeclined.addEventListener('click', function() {
+                contentDeclined.classList.toggle('expanded');
+                toggleDeclined.innerHTML = contentDeclined.classList.contains('expanded') ? 
+                    '<i class="fas fa-eye-slash"></i><span>Ocultar</span>' : 
+                    '<i class="fas fa-eye"></i><span>Mostrar</span>';
+            });
+
+            // ✅ FUNCIÓN: Verificar sesión
+            function checkUserSession() {
+                fetch('auth.php?action=check_session')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            hasActiveSession = true;
+                            userCredits = data.user.credits;
+                            currentUser = data.user;
+                            creditsCount.textContent = userCredits;
+                            
+                            // Actualizar información del usuario
+                            updateUserInfo();
+                            
+                            // Mostrar botones de sesión
+                            sessionButtons.style.display = 'flex';
+                            
+                            // Actualizar color según créditos
+                            updateCreditsColor();
+                            
+                            // Habilitar botón de inicio
+                            testarBtn.disabled = false;
+                            
+                            // Si no tiene créditos, mostrar advertencia
+                            if (userCredits <= 0) {
+                                showToast('warning', 'No tienes créditos. Recarga para usar el checker.');
+                            }
+                            
+                        } else {
+                            handleNoSession();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error verificando sesión:', error);
+                        showToast('error', 'Error de conexión al verificar sesión');
+                        handleNoSession();
+                    });
+            }
+
+            function updateUserInfo() {
+                if (currentUser) {
+                    const initial = currentUser.username ? currentUser.username.charAt(0).toUpperCase() : 'U';
+                    userAvatar.textContent = initial;
+                    userName.textContent = currentUser.username || 'Usuario';
+                }
+            }
+
+            function updateCreditsColor() {
+                if (userCredits <= 0) {
+                    userCreditsDisplay.style.background = 'var(--error)';
+                } else if (userCredits < 10) {
+                    userCreditsDisplay.style.background = 'var(--warning)';
+                } else {
+                    userCreditsDisplay.style.background = 'var(--primary)';
+                }
+            }
+
+            function handleNoSession() {
+                hasActiveSession = false;
+                currentUser = null;
+                userCreditsDisplay.classList.add('no-session');
+                userCreditsDisplay.style.background = 'var(--error)';
+                creditsCount.textContent = '0';
+                
+                sessionButtons.style.display = 'none';
+                testarBtn.disabled = true;
+                testarBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i><span>INICIA SESIÓN</span>';
+                
+                userCreditsDisplay.innerHTML = '<i class="fas fa-sign-in-alt"></i> Inicia Sesión';
+                userCreditsDisplay.title = "Haz clic para iniciar sesión";
+                
+                // Solo agregar el event listener una vez
+                userCreditsDisplay.onclick = function() {
+                    window.location.href = 'login.html';
+                };
+                
+                showToast('warning', 'Inicia sesión para usar el validador');
+            }
+
+            // ✅ FUNCIÓN: Modal para recargar créditos
+            function showCreditsModal() {
+                Swal.fire({
+                    title: 'Recargar Créditos',
+                    html: `
+                        <div style="text-align: left; margin-top: 1rem;">
+                            <div class="form-group">
+                                <label for="creditKey" class="form-label">Clave de Recarga</label>
+                                <input type="text" id="creditKey" class="swal2-input" placeholder="Ingrese su clave de recarga">
+                            </div>
+                            <div style="background: var(--info-light); padding: 1rem; border-radius: 12px; margin-top: 1rem;">
+                                <h4 style="margin-bottom: 0.5rem; color: var(--info-dark);">💡 Información:</h4>
+                                <ul style="padding-left: 1.5rem; color: var(--info-dark);">
+                                    <li>Las claves se obtienen con el administrador</li>
+                                    <li>Cada clave tiene un número específico de créditos</li>
+                                    <li>Los créditos se agregan inmediatamente</li>
+                                </ul>
+                            </div>
+                        </div>
+                    `,
+                    icon: 'info',
+                    showCancelButton: true,
+                    confirmButtonText: 'Recargar',
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: '#06D6A0',
+                    cancelButtonColor: '#6B7280',
+                    background: '#FFFFFF',
+                    color: '#1F2937',
+                    preConfirm: () => {
+                        const key = document.getElementById('creditKey').value;
+                        if (!key) {
+                            Swal.showValidationMessage('Por favor ingrese una clave de recarga');
+                            return false;
+                        }
+                        return key;
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        rechargeCredits(result.value);
+                    }
+                });
+            }
+
+            // ✅ FUNCIÓN: Recargar créditos
+            function rechargeCredits(key) {
+                const formData = new FormData();
+                formData.append('key', key);
+
+                fetch('auth.php?action=recharge_credits', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        userCredits = data.new_balance;
+                        creditsCount.textContent = userCredits;
+                        updateCreditsColor();
+                        
+                        Swal.fire({
+                            title: '¡Éxito!',
+                            text: `Se han agregado ${data.credits_added} créditos. Nuevo saldo: ${data.new_balance}`,
+                            icon: 'success',
+                            confirmButtonText: 'Aceptar',
+                            confirmButtonColor: '#06D6A0'
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: data.message || 'Error al recargar créditos',
+                            icon: 'error',
+                            confirmButtonText: 'Aceptar'
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error recargando créditos:', error);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Error de conexión al recargar créditos',
+                        icon: 'error',
+                        confirmButtonText: 'Aceptar'
+                    });
+                });
+            }
+
+            // ✅ FUNCIÓN: Cerrar sesión
+            function logoutUser() {
+                Swal.fire({
+                    title: 'Cerrar Sesión',
+                    text: '¿Estás seguro de que deseas cerrar sesión?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, cerrar sesión',
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: '#EF4444',
+                    cancelButtonColor: '#6B7280',
+                    background: '#FFFFFF',
+                    color: '#1F2937'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch('auth.php?action=logout', {
+                            method: 'POST'
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                showToast('success', 'Sesión cerrada correctamente');
+                                setTimeout(() => {
+                                    window.location.reload();
+                                }, 1500);
+                            } else {
+                                showToast('error', 'Error al cerrar sesión');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error cerrando sesión:', error);
+                            showToast('error', 'Error de conexión al cerrar sesión');
+                        });
+                    }
+                });
+            }
+
+            // ✅ FUNCIÓN: Mostrar ayuda
+            function showHelp() {
+                Swal.fire({
+                    title: 'Ayuda - Stripe Checker',
+                    html: `
+                        <div style="text-align: left; margin-top: 1rem;">
+                            <h4 style="margin-bottom: 1rem;">Cómo usar el sistema:</h4>
+                            <ol style="padding-left: 1.5rem; margin-bottom: 1.5rem;">
+                                <li style="margin-bottom: 0.5rem;">Pegue su lista de tarjetas en el campo correspondiente</li>
+                                <li style="margin-bottom: 0.5rem;">Haga clic en "START CHECK" para iniciar</li>
+                                <li style="margin-bottom: 0.5rem;">Espere los resultados en las secciones correspondientes</li>
+                                <li style="margin-bottom: 0.5rem;">Use "STOP" para detener la verificación</li>
+                            </ol>
+                            <h4 style="margin-bottom: 0.5rem;">Sistema de Créditos:</h4>
+                            <ul style="padding-left: 1.5rem; margin-bottom: 1.5rem;">
+                                <li>✅ Cada verificación consume 1 crédito</li>
+                                <li>✅ Verifique que tenga créditos suficientes</li>
+                                <li>✅ Puede recargar créditos con claves</li>
+                            </ul>
+                            <p><strong>Formato de tarjetas:</strong> número|mes|año|cvv</p>
+                            <p><strong>Resultados:</strong> CVV (aprobadas con CVV), CCN (aprobadas sin CVV), Declined (rechazadas)</p>
+                        </div>
+                    `,
+                    icon: 'info',
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#4F46E5',
+                    background: '#FFFFFF',
+                    color: '#1F2937',
+                    width: '600px'
+                });
+            }
+
+            // ✅ FUNCIÓN: Iniciar verificación
+            function startChecking() {
+                if (isRunning) return;
+                
+                if (!hasActiveSession) {
+                    Swal.fire({
+                        title: 'Sesión Requerida',
+                        text: 'Debes iniciar sesión para usar el validador',
+                        icon: 'warning',
+                        confirmButtonText: 'Iniciar Sesión',
+                        cancelButtonText: 'Cancelar',
+                        showCancelButton: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = 'login.html';
+                        }
+                    });
+                    return;
+                }
+                
+                const list = lista.value.trim();
+                if (list === '') {
+                    showToast('error', 'Por favor, ingrese una lista de tarjetas.');
+                    return;
+                }
+                
+                cards = list.split('\n').filter(line => line.trim() !== '');
+                if (cards.length === 0) {
+                    showToast('error', 'No se encontraron tarjetas válidas.');
+                    return;
+                }
+                
+                // Verificar créditos suficientes
+                if (userCredits < cards.length) {
+                    Swal.fire({
+                        title: 'Créditos Insuficientes',
+                        text: `Necesitas ${cards.length} créditos pero solo tienes ${userCredits}.`,
+                        icon: 'warning',
+                        confirmButtonText: 'Entendido'
+                    });
+                    return;
+                }
+                
+                isRunning = true;
+                currentIndex = 0;
+                totalCards = cards.length;
+                
+                // Resetear contadores
+                approvedCVV = [];
+                approvedCCN = [];
+                declined = [];
+                updateCounters();
+                updateResults();
+                
+                testarBtn.disabled = true;
+                stopBtn.disabled = false;
+                
+                showToast('success', '¡Verificación iniciada!');
+                
+                // Iniciar el proceso
+                checkNext();
+            }
+
+            // ✅ FUNCIÓN: Procesar siguiente tarjeta
+            function checkNext() {
+                if (!isRunning || currentIndex >= totalCards) {
+                    stopChecking();
+                    showToast('success', '¡Verificación completada!');
+                    return;
+                }
+                
+                const card = cards[currentIndex].trim();
+                if (card === '') {
+                    currentIndex++;
+                    setTimeout(checkNext, 100);
+                    return;
+                }
+                
+                // Consumir crédito y verificar
+                consumeCreditAndCheck(card);
+            }
+
+            // ✅ FUNCIÓN: Consumir crédito y verificar
+            function consumeCreditAndCheck(card) {
+                const formData = new FormData();
+                formData.append('consume', '1');
+
+                fetch('auth.php?action=consume_credit', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        userCredits = data.new_balance;
+                        creditsCount.textContent = userCredits;
+                        updateCreditsColor();
+                        
+                        // Verificar tarjeta
+                        checkCard(card);
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: data.message || 'Error al consumir crédito',
+                            icon: 'error',
+                            confirmButtonText: 'Entendido'
+                        }).then(() => {
+                            stopChecking();
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error consumiendo crédito:', error);
+                    showToast('error', 'Error al procesar crédito');
+                    stopChecking();
+                });
+            }
+
+            // ✅ FUNCIÓN: Verificar tarjeta
+            function checkCard(card) {
+                if (!isValidCardFormat(card)) {
+                    handleResult(card, "Formato inválido. Use: Número|Mes|Año|CVV", "declined");
+                    currentIndex++;
+                    setTimeout(checkNext, 100);
+                    return;
+                }
+                
+                // Llamada AJAX original
+                $.ajax({
+                    url: 'chk.php?lista=' + card,
+                    type: 'GET',
+                    async: true,
+                    success: function(resultado) {
+                        if (resultado.match("#CVV")) {
+                            handleResult(card, resultado, "cvv");
+                        } else if (resultado.match("#CCN")) {
+                            handleResult(card, resultado, "ccn");
+                        } else {
+                            handleResult(card, resultado, "declined");
+                        }
+                        
+                        currentIndex++;
+                        setTimeout(checkNext, 100);
+                    },
+                    error: function() {
+                        handleResult(card, "Error de conexión", "declined");
+                        currentIndex++;
+                        setTimeout(checkNext, 100);
+                    }
+                });
+            }
+
+            // ✅ FUNCIÓN: Manejar resultado
+            function handleResult(card, resultado, tipo) {
+                switch(tipo) {
+                    case "cvv":
+                        approvedCVV.push({card: card, result: resultado});
+                        break;
+                    case "ccn":
+                        approvedCCN.push({card: card, result: resultado});
+                        break;
+                    case "declined":
+                        declined.push({card: card, result: resultado});
+                        break;
+                }
+                
+                updateCounters();
+                updateResults();
+                
+                // Remover línea procesada
+                removeLine();
+            }
+
+            // ✅ FUNCIÓN: Validar formato
+            function isValidCardFormat(card) {
+                const parts = card.split('|');
+                if (parts.length !== 4) return false;
+                
+                const [number, month, year, cvv] = parts;
+                
+                if (!/^\d{13,19}$/.test(number.replace(/\s/g, ''))) return false;
+                if (!/^(0?[1-9]|1[0-2])$/.test(month)) return false;
+                if (!/^\d{4}$/.test(year)) return false;
+                if (!/^\d{3,4}$/.test(cvv)) return false;
+                
+                return true;
+            }
+
+            // ✅ FUNCIÓN: Remover línea procesada
+            function removeLine() {
+                const lines = lista.value.split('\n');
+                if (lines.length > 1) {
+                    lines.shift();
+                    lista.value = lines.join('\n');
+                } else {
+                    lista.value = '';
+                }
+            }
+
+            // ✅ FUNCIÓN: Actualizar contadores
+            function updateCounters() {
+                cLive.textContent = approvedCVV.length;
+                cWarn.textContent = approvedCCN.length;
+                cDie.textContent = declined.length;
+                
+                const checked = approvedCVV.length + approvedCCN.length + declined.length;
+                total.textContent = checked;
+                carregadas.textContent = totalCards;
+                
+                cLive2.textContent = approvedCVV.length;
+                cWarn2.textContent = approvedCCN.length;
+                cDie2.textContent = declined.length;
+            }
+
+            // ✅ FUNCIÓN: Actualizar resultados
+            function updateResults() {
+                // Approved CVV
+                if (approvedCVV.length === 0) {
+                    aprovadasDiv.innerHTML = '<div class="empty-message">No hay tarjetas aprobadas CVV aún</div>';
+                } else {
+                    let html = '';
+                    approvedCVV.forEach(item => {
+                        html += `<div style="padding: 0.5rem 0; border-bottom: 1px solid var(--gray-light);">${item.card} | ${item.result}</div>`;
+                    });
+                    aprovadasDiv.innerHTML = html;
+                }
+                
+                // Approved CCN
+                if (approvedCCN.length === 0) {
+                    edrovadasDiv.innerHTML = '<div class="empty-message">No hay tarjetas aprobadas CCN aún</div>';
+                } else {
+                    let html = '';
+                    approvedCCN.forEach(item => {
+                        html += `<div style="padding: 0.5rem 0; border-bottom: 1px solid var(--gray-light);">${item.card} | ${item.result}</div>`;
+                    });
+                    edrovadasDiv.innerHTML = html;
+                }
+                
+                // Declined
+                if (declined.length === 0) {
+                    reprovadasDiv.innerHTML = '<div class="empty-message">No hay tarjetas rechazadas aún</div>';
+                } else {
+                    let html = '';
+                    declined.forEach(item => {
+                        html += `<div style="padding: 0.5rem 0; border-bottom: 1px solid var(--gray-light);">${item.card} | ${item.result}</div>`;
+                    });
+                    reprovadasDiv.innerHTML = html;
+                }
+            }
+
+            // ✅ FUNCIÓN: Detener verificación
+            function stopChecking() {
+                isRunning = false;
+                testarBtn.disabled = false;
+                stopBtn.disabled = true;
+                showToast('info', 'Verificación detenida.');
+            }
+
+            // ✅ FUNCIÓN: Limpiar todo
+            function clearAll() {
+                Swal.fire({
+                    title: 'Limpiar Todo',
+                    text: '¿Está seguro de que desea borrar todos los datos?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#4F46E5',
+                    cancelButtonColor: '#6B7280',
+                    confirmButtonText: 'Sí, limpiar',
+                    cancelButtonText: 'Cancelar',
+                    background: '#FFFFFF',
+                    color: '#1F2937'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        lista.value = '';
+                        approvedCVV = [];
+                        approvedCCN = [];
+                        declined = [];
+                        currentIndex = 0;
+                        totalCards = 0;
+                        isRunning = false;
+                        
+                        updateCounters();
+                        updateResults();
+                        
+                        testarBtn.disabled = false;
+                        stopBtn.disabled = true;
+                        
+                        showToast('success', '¡Todos los datos han sido limpiados!');
+                    }
+                });
+            }
+
+            // ✅ FUNCIÓN: Mostrar toast
+            function showToast(icon, message) {
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        toast.addEventListener('mouseenter', Swal.stopTimer);
+                        toast.addEventListener('mouseleave', Swal.resumeTimer);
+                    },
+                    background: '#FFFFFF',
+                    color: '#1F2937'
+                });
+                
+                Toast.fire({
+                    icon: icon,
+                    title: message
+                });
+            }
+        });
+    </script>
+</body>
+</html>
