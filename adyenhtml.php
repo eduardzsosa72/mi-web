@@ -2,7 +2,7 @@
 error_reporting(0);
 ?>
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="es">
 <head>
     <title>ADYEN | GOKU CHK</title>
     <meta charset="UTF-8">
@@ -46,7 +46,7 @@ error_reporting(0);
             overflow-x: hidden;
         }
 
-        /* Efeito de linhas de conexão */
+        /* Efecto de líneas de conexión */
         .network-lines {
             position: fixed;
             top: 0;
@@ -58,7 +58,7 @@ error_reporting(0);
             pointer-events: none;
         }
 
-        /* Partículas flutuantes */
+        /* Partículas flotantes */
         .particles {
             position: fixed;
             top: 0;
@@ -462,7 +462,7 @@ error_reporting(0);
             color: var(--accent-light);
         }
 
-        /* Toastr Customization */
+        /* Personalización de Toastr */
         #toast-container > .toast {
             background-image: none !important;
             padding: 15px 15px 15px 50px;
@@ -511,14 +511,14 @@ error_reporting(0);
             content: '\f071';
         }
 
-        /* Corrigindo o texto do toast */
+        /* Corrigiendo el texto del toast */
         .toast-message {
             color: white !important;
             font-weight: 500;
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }
 
-        /* API Selection */
+        /* Selección de API */
         .api-selection {
             background: rgba(42, 90, 140, 0.05);
             border-radius: var(--border-radius);
@@ -598,7 +598,7 @@ error_reporting(0);
             transform: rotate(45deg);
         }
 
-        /* Thread Selection */
+        /* Selección de hilos */
         .thread-selection {
             margin-top: 1rem;
         }
@@ -658,7 +658,7 @@ error_reporting(0);
             margin-bottom: 1rem;
         }
 
-        /* Footer */
+        /* Pie de página */
         .footer {
             text-align: center;
             margin-top: 3rem;
@@ -687,7 +687,7 @@ error_reporting(0);
             margin: 0 0.5rem;
         }
 
-        /* Efeito de pulso suave */
+        /* Efecto de pulso suave */
         @keyframes softPulse {
             0% { opacity: 0.7; }
             50% { opacity: 1; }
@@ -698,7 +698,7 @@ error_reporting(0);
             animation: softPulse 3s infinite ease-in-out;
         }
 
-        /* Efeito de conexão de nós */
+        /* Efecto de conexión de nodos */
         .node {
             position: absolute;
             width: 4px;
@@ -708,7 +708,7 @@ error_reporting(0);
             opacity: 0.3;
         }
 
-        /* Efeito de cobrinha */
+        /* Efecto de serpiente */
         .snake {
             position: absolute;
             width: 100%;
@@ -724,7 +724,7 @@ error_reporting(0);
             100% { transform: translateY(0) scaleX(0.8); }
         }
 
-        /* Efeito de caixa pulsante */
+        /* Efecto de caja pulsante */
         .pulse-box {
             position: absolute;
             width: 40px;
@@ -740,7 +740,7 @@ error_reporting(0);
             100% { transform: scale(1) rotate(0deg); opacity: 0.05; }
         }
 
-        /* Live Animation */
+        /* Animación en vivo */
         @keyframes liveFlash {
             0% { background-color: rgba(44, 110, 73, 0); }
             50% { background-color: rgba(44, 110, 73, 0.2); }
@@ -802,7 +802,7 @@ error_reporting(0);
     
     <div class="container">
         <a href="../../" class="btn btn-secondary mb-4 back-btn">
-            <i class="fas fa-arrow-left"></i> Voltar ao Dashboard
+            <i class="fas fa-arrow-left"></i> Volver al Dashboard
         </a>
 
         <div class="card">
@@ -814,11 +814,11 @@ error_reporting(0);
                 <div class="user-info">
                     <div class="user-info-item">
                         <i class="fas fa-user"></i>
-                        <span>Usuário: <strong><?php echo $username ?? 'N/A'; ?></strong></span>
+                        <span>Usuario: <strong><?php echo $username ?? 'N/A'; ?></strong></span>
                     </div>
                     <div class="user-info-item">
                         <i class="fas fa-calendar-alt"></i>
-                        <span>Expira em: <strong><?php echo $expira ?? 'N/A'; ?></strong></span>
+                        <span>Expira en: <strong><?php echo $expira ?? 'N/A'; ?></strong></span>
                     </div>
                     <div class="user-info-item">
                         <i class="fas fa-clock"></i>
@@ -827,7 +827,7 @@ error_reporting(0);
                 </div>
 
                 <div class="api-selection">
-                    <h5><i class="fas fa-server"></i> Selecione a API</h5>
+                    <h5><i class="fas fa-server"></i> Selecciona la API</h5>
                     <div class="api-options">
                         <label class="api-option">
                             <input type="radio" name="api" value="adyen.php" data-name="ALLBINS (ADYEN)">
@@ -838,7 +838,7 @@ error_reporting(0);
                 </div>
 
                 <div class="thread-selection">
-                    <label for="thread-slider"><i class="fas fa-bolt"></i> Threads Simultâneos</label>
+                    <label for="thread-slider"><i class="fas fa-bolt"></i> Hilos Simultáneos</label>
                     <input type="range" min="1" max="4" value="1" class="thread-slider" id="thread-slider">
                     <div class="thread-value" id="thread-value">1x</div>
                 </div>
@@ -854,13 +854,13 @@ error_reporting(0);
                         <i class="fas fa-stop"></i> Parar
                     </button>
                     <button class="btn btn-secondary" id="chk-clean">
-                        <i class="fas fa-trash-alt"></i> Limpar
+                        <i class="fas fa-trash-alt"></i> Limpiar
                     </button>
                 </div>
 
                 <div class="mt-4">
                     <span class="badge badge-warning" id="estatus">
-                        <i class="fas fa-hourglass-start"></i> Aguardando inicio...
+                        <i class="fas fa-hourglass-start"></i> Esperando inicio...
                     </span>
                 </div>
             </div>
@@ -870,22 +870,22 @@ error_reporting(0);
             <ul class="nav nav-tabs" id="myTab" role="tablist">
                 <li class="nav-item">
                     <a class="nav-link active" data-toggle="tab" href="#chk-home">
-                        <i class="far fa-credit-card"></i> Cartões
+                        <i class="far fa-credit-card"></i> Tarjetas
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" data-toggle="tab" href="#chk-lives">
-                        <i class="fas fa-check-circle"></i> Aprovados
+                        <i class="fas fa-check-circle"></i> Aprobadas
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" data-toggle="tab" href="#chk-dies">
-                        <i class="fas fa-times-circle"></i> Reprovados
+                        <i class="fas fa-times-circle"></i> Rechazadas
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" data-toggle="tab" href="#chk-errors">
-                        <i class="fas fa-exclamation-triangle"></i> Erros
+                        <i class="fas fa-exclamation-triangle"></i> Errores
                     </a>
                 </li>
             </ul>
@@ -895,19 +895,19 @@ error_reporting(0);
                     <div class="status-bar">
                         <div class="status-item lives">
                             <i class="fas fa-check-circle"></i>
-                            <span>Aprovadas: <strong class="val-lives">0</strong></span>
+                            <span>Aprobadas: <strong class="val-lives">0</strong></span>
                         </div>
                         <div class="status-item dies">
                             <i class="fas fa-times-circle"></i>
-                            <span>Reprovadas: <strong class="val-dies">0</strong></span>
+                            <span>Rechazadas: <strong class="val-dies">0</strong></span>
                         </div>
                         <div class="status-item errors">
                             <i class="fas fa-exclamation-triangle"></i>
-                            <span>Erros: <strong class="val-errors">0</strong></span>
+                            <span>Errores: <strong class="val-errors">0</strong></span>
                         </div>
                         <div class="status-item tested">
                             <i class="fas fa-vial"></i>
-                            <span>Testadas: <strong class="val-tested">0</strong></span>
+                            <span>Testeadas: <strong class="val-tested">0</strong></span>
                         </div>
                         <div class="status-item total">
                             <i class="fas fa-list"></i>
@@ -916,15 +916,15 @@ error_reporting(0);
                     </div>
                     <div class="form-group mb-0">
                         <label for="lista_cartoes">
-                            <i class="fas fa-list-ul"></i> Lista de Cartões
+                            <i class="fas fa-list-ul"></i> Lista de Tarjetas
                         </label>
-                        <textarea id="lista_cartoes" class="form-control" rows="10" placeholder="Insira sua lista no formato: NÚMERO|MÊS|ANO|CVV"></textarea>
+                        <textarea id="lista_cartoes" class="form-control" rows="10" placeholder="Inserta tu lista en formato: NÚMERO|MES|AÑO|CVV"></textarea>
                     </div>
                 </div>
 
                 <div class="tab-pane fade" id="chk-lives">
                     <h5 class="mb-3">
-                        <i class="fas fa-check-circle text-success"></i> Aprovadas
+                        <i class="fas fa-check-circle text-success"></i> Aprobadas
                     </h5>
                     <p>Total: <span class="val-lives">0</span></p>
                     
@@ -933,7 +933,7 @@ error_reporting(0);
                             <i class="fas fa-copy"></i> Copiar
                         </button>
                         <button class="btn btn-danger" onclick="apagarValoresLives()">
-                            <i class="fas fa-trash-alt"></i> Limpar
+                            <i class="fas fa-trash-alt"></i> Limpiar
                         </button>
                     </div>
                     
@@ -942,13 +942,13 @@ error_reporting(0);
 
                 <div class="tab-pane fade" id="chk-dies">
                     <h5 class="mb-3">
-                        <i class="fas fa-times-circle text-danger"></i> Reprovadas
+                        <i class="fas fa-times-circle text-danger"></i> Rechazadas
                     </h5>
                     <p>Total: <span class="val-dies">0</span></p>
                     
                     <div class="buttons mb-3">
                         <button class="btn btn-danger" onclick="apagarValoresDies()">
-                            <i class="fas fa-trash-alt"></i> Limpar
+                            <i class="fas fa-trash-alt"></i> Limpiar
                         </button>
                     </div>
                     
@@ -957,13 +957,13 @@ error_reporting(0);
 
                 <div class="tab-pane fade" id="chk-errors">
                     <h5 class="mb-3">
-                        <i class="fas fa-exclamation-triangle text-warning"></i> Erros
+                        <i class="fas fa-exclamation-triangle text-warning"></i> Errores
                     </h5>
                     <p>Total: <span class="val-errors">0</span></p>
                     
                     <div class="buttons mb-3">
                         <button class="btn btn-warning" onclick="apagarValoresErrors()">
-                            <i class="fas fa-trash-alt"></i> Limpar
+                            <i class="fas fa-trash-alt"></i> Limpiar
                         </button>
                     </div>
                     
@@ -973,8 +973,8 @@ error_reporting(0);
         </div>
 
         <footer class="footer">
-            <p>© 2024 GOKUCHK - Todos os direitos reservados</p>
-            <p>Desenvolvido por <a href="" target="_blank"></a></p>
+            <p>© 2024 GOKUCHK - Todos los derechos reservados</p>
+            <p>Desarrollado por <a href="" target="_blank"></a></p>
             <div class="social-links">
                 <a href="https://t.me/pladixoficial" target="_blank" class="social-icon"><i class="fab fa-telegram"></i></a>
             </div>
@@ -994,7 +994,7 @@ error_reporting(0);
         var activeThreads = 0;
         var maxThreads = 1;
 
-        // Configuração personalizada do Toastr
+        // Configuración personalizada de Toastr
         toastr.options = {
             closeButton: true,
             debug: false,
@@ -1013,13 +1013,13 @@ error_reporting(0);
             hideMethod: "fadeOut"
         };
 
-        // Criar efeitos visuais de conexão
+        // Crear efectos visuales de conexión
         function createNetworkEffects() {
             const networkLines = document.createElement('div');
             networkLines.className = 'network-lines';
             document.body.appendChild(networkLines);
 
-            // Criar nós
+            // Crear nodos
             for (let i = 0; i < 20; i++) {
                 const node = document.createElement('div');
                 node.className = 'node';
@@ -1028,7 +1028,7 @@ error_reporting(0);
                 networkLines.appendChild(node);
             }
 
-            // Criar cobrinhas
+            // Crear serpientes
             for (let i = 0; i < 5; i++) {
                 const snake = document.createElement('div');
                 snake.className = 'snake';
@@ -1039,7 +1039,7 @@ error_reporting(0);
                 networkLines.appendChild(snake);
             }
 
-            // Criar caixas pulsantes
+            // Crear cajas pulsantes
             for (let i = 0; i < 8; i++) {
                 const pulseBox = document.createElement('div');
                 pulseBox.className = 'pulse-box';
@@ -1049,7 +1049,7 @@ error_reporting(0);
                 networkLines.appendChild(pulseBox);
             }
 
-            // Criar partículas
+            // Crear partículas
             const particles = document.createElement('div');
             particles.className = 'particles';
             document.body.appendChild(particles);
@@ -1064,22 +1064,22 @@ error_reporting(0);
             }
         }
 
-        // Inicializar efeitos visuais
+        // Inicializar efectos visuales
         document.addEventListener('DOMContentLoaded', createNetworkEffects);
 
         function apagarValoresLives() { 
             document.getElementById("lives").innerHTML = ""; 
-            toastr.info("Lista de aprovados limpa com sucesso!");
+            toastr.info("Lista de aprobadas limpiada exitosamente!");
         }
         
         function apagarValoresDies() { 
             document.getElementById("dies").innerHTML = ""; 
-            toastr.info("Lista de reprovados limpa com sucesso!");
+            toastr.info("Lista de rechazadas limpiada exitosamente!");
         }
         
         function apagarValoresErrors() { 
             document.getElementById("errors").innerHTML = ""; 
-            toastr.info("Lista de erros limpa com sucesso!");
+            toastr.info("Lista de errores limpiada exitosamente!");
         }
 
         $(document).ready(function() {
@@ -1088,7 +1088,7 @@ error_reporting(0);
             var token_api = $("#token_api").val();
             var processingQueue = [];
 
-            // Thread slider
+            // Control deslizante de hilos
             var slider = document.getElementById("thread-slider");
             var output = document.getElementById("thread-value");
             
@@ -1098,12 +1098,12 @@ error_reporting(0);
                 maxThreads = threadCount;
             }
 
-            // API selection
+            // Selección de API
             $('input[name="api"]').change(function() {
                 selectedApi = $(this).val();
                 var apiName = $(this).data('name');
                 $("#chk-start").prop("disabled", false);
-                toastr.info("API selecionada: " + apiName);
+                toastr.info("API seleccionada: " + apiName);
             });
 
             function removelinha() {
@@ -1131,12 +1131,10 @@ error_reporting(0);
                 if (stopped || paused) return;
 
                 activeThreads++;
-                // var cookieValue = $("#cookie-input-2").val().trim();
 
                 $.ajax({
                     url: selectedApi,
                     type: 'GET',
-                    // data: { lista: conteudo, token_api: token_api, cookie: cookieValue }
                     data: { lista: conteudo, token_api: token_api }
                 }).done(function(response) {
                     if (stopped || paused) {
@@ -1148,7 +1146,7 @@ error_reporting(0);
                     if (response.indexOf("Aprovada") >= 0) {
                         lives++;
                         $("#estatus").attr("class", "badge badge-success").html(`<i class="fas fa-check"></i> ${conteudo} -> LIVE`);
-                        toastr.success(`Aprovada! ${conteudo}`);
+                        toastr.success(`¡Aprobada! ${conteudo}`);
                         $("#lives").append(response + "<br>");
                         $("#lives").addClass("live-flash");
                         setTimeout(function() {
@@ -1158,22 +1156,22 @@ error_reporting(0);
                     } else if (response.indexOf("Reprovada") >= 0) {
                         dies++;
                         $("#estatus").attr("class", "badge badge-danger").html(`<i class="fas fa-times"></i> ${conteudo} -> DIE`);
-                        toastr.error(`Reprovada! ${conteudo}`);
+                        toastr.error(`¡Rechazada! ${conteudo}`);
                         $("#dies").append(response + "<br>");
                     } else {
                         errors++;
                         $("#estatus").attr("class", "badge badge-warning").html(`<i class="fas fa-exclamation-triangle"></i> ${conteudo} -> ERROR`);
-                        toastr.warning(`Ocorreu um erro! ${conteudo}`);
+                        toastr.warning(`¡Ocurrió un error! ${conteudo}`);
                         $("#errors").append(response + "<br>");
                     }
 
                     updateStats();
                     activeThreads--;
                     
-                    // Verificar se todos os testes foram concluídos
+                    // Verificar si todas las pruebas fueron concluidas
                     if (tested >= total && activeThreads === 0) {
-                        $("#estatus").attr("class", "badge badge-success").html('<i class="fas fa-check"></i> Teste finalizado');
-                        toastr.success(`Teste de ${total} itens finalizado com sucesso!`);
+                        $("#estatus").attr("class", "badge badge-success").html('<i class="fas fa-check"></i> Prueba finalizada');
+                        toastr.success(`¡Prueba de ${total} items finalizada con éxito!`);
                         $("#chk-start").removeAttr('disabled');
                         $("#chk-clean").removeAttr('disabled');
                         $("#chk-stop, #chk-pause").attr("disabled", "true");
@@ -1184,7 +1182,7 @@ error_reporting(0);
                 }).fail(function() {
                     errors++;
                     updateStats();
-                    toastr.error("Erro na requisição ao servidor!");
+                    toastr.error("¡Error en la solicitud al servidor!");
                     activeThreads--;
                     processNextInQueue();
                 });
@@ -1193,8 +1191,8 @@ error_reporting(0);
             function testar(tested, total, lista) {
                 if (stopped || paused || tested >= total) {
                     if (tested >= total) {
-                        $("#estatus").attr("class", "badge badge-success").html('<i class="fas fa-check"></i> Teste finalizado');
-                        toastr.success(`Teste de ${total} itens finalizado com sucesso!`);
+                        $("#estatus").attr("class", "badge badge-success").html('<i class="fas fa-check"></i> Prueba finalizada');
+                        toastr.success(`¡Prueba de ${total} items finalizada con éxito!`);
                         $("#chk-start").removeAttr('disabled');
                         $("#chk-clean").removeAttr('disabled');
                         $("#chk-stop, #chk-pause").attr("disabled", "true");
@@ -1202,15 +1200,15 @@ error_reporting(0);
                     return false;
                 }
 
-                // Limpar a fila de processamento
+                // Limpiar la cola de procesamiento
                 processingQueue = [];
                 
-                // Adicionar todos os cartões à fila
+                // Agregar todas las tarjetas a la cola
                 for (var i = 0; i < lista.length; i++) {
                     processingQueue.push(lista[i]);
                 }
                 
-                // Iniciar threads de acordo com o número selecionado
+                // Iniciar hilos de acuerdo con el número seleccionado
                 for (var i = 0; i < maxThreads; i++) {
                     processNextInQueue();
                 }
@@ -1218,25 +1216,23 @@ error_reporting(0);
 
             $("#chk-start").click(function() {
                 if (!selectedApi) {
-                    toastr.warning("Por favor, selecione uma API primeiro!");
+                    toastr.warning("¡Por favor, selecciona una API primero!");
                     return;
                 }
 
                 var lista = $("#lista_cartoes").val().trim().split('\n');
                 if (!lista[0]) {
-                    toastr.warning("Por favor, insira uma lista de cartões!");
+                    toastr.warning("¡Por favor, inserta una lista de tarjetas!");
                     return $("#lista_cartoes").focus();
                 }
-
-           
 
                 total = lista.length;
                 stopped = paused = false;
                 tested = lives = dies = errors = 0;
                 activeThreads = 0;
                 updateStats();
-                toastr.success(`Checker Iniciado com ${maxThreads} threads. Boa sorte!`);
-                $("#estatus").attr("class", "badge badge-success").html('<i class="fas fa-cog fa-spin"></i> Checker iniciado, aguarde...');
+                toastr.success(`¡Checker iniciado con ${maxThreads} hilos! Buena suerte`);
+                $("#estatus").attr("class", "badge badge-success").html('<i class="fas fa-cog fa-spin"></i> Checker iniciado, espera...');
                 $("#chk-stop, #chk-pause").removeAttr('disabled');
                 $("#chk-start, #chk-clean").attr("disabled", "true");
                 testar(0, total, lista);
@@ -1246,7 +1242,7 @@ error_reporting(0);
                 paused = true;
                 $("#chk-start").removeAttr('disabled');
                 $("#chk-pause").attr("disabled", "true");
-                toastr.info("Checker Pausado! Clique em Iniciar para continuar.");
+                toastr.info("¡Checker pausado! Haz clic en Iniciar para continuar.");
                 $("#estatus").attr("class", "badge badge-info").html('<i class="fas fa-pause"></i> Checker pausado...');
             });
 
@@ -1255,8 +1251,8 @@ error_reporting(0);
                 $("#chk-start").removeAttr('disabled');
                 $("#chk-clean").removeAttr('disabled');
                 $("#chk-stop, #chk-pause").attr("disabled", "true");
-                toastr.info("Checker Parado! Todos os processos foram interrompidos.");
-                $("#estatus").attr("class", "badge badge-secondary").html('<i class="fas fa-stop"></i> Checker parado...');
+                toastr.info("¡Checker detenido! Todos los procesos fueron interrumpidos.");
+                $("#estatus").attr("class", "badge badge-secondary").html('<i class="fas fa-stop"></i> Checker detenido...');
             });
 
             $("#chk-clean").click(function() {
@@ -1265,8 +1261,8 @@ error_reporting(0);
                 updateStats();
                 $("#lista_cartoes").val("");
                 $("#lives, #dies, #errors").empty();
-                toastr.info("Checker Limpo! Todos os dados foram resetados.");
-                $("#estatus").attr("class", "badge badge-warning").html('<i class="fas fa-hourglass-start"></i> Aguardando inicio...');
+                toastr.info("¡Checker limpiado! Todos los datos fueron reiniciados.");
+                $("#estatus").attr("class", "badge badge-warning").html('<i class="fas fa-hourglass-start"></i> Esperando inicio...');
             });
 
             $("#copyButton").click(function() {
@@ -1276,10 +1272,10 @@ error_reporting(0);
                 window.getSelection().addRange(range);
                 try {
                     document.execCommand('copy');
-                    toastr.success("Aprovados copiados para a área de transferência!");
+                    toastr.success("¡Aprobadas copiadas al portapapeles!");
                 } catch (err) {
-                    toastr.error("Erro ao copiar!");
-                    console.error('Erro ao copiar: ', err);
+                    toastr.error("¡Error al copiar!");
+                    console.error('Error al copiar: ', err);
                 }
                 window.getSelection().removeAllRanges();
             });
@@ -1287,4 +1283,3 @@ error_reporting(0);
     </script>
 </body>
 </html>
-
