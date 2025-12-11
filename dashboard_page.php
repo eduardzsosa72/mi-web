@@ -56,6 +56,7 @@ if ($db) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css">
     <style>
+        /* Todos tus estilos CSS permanecen iguales... */
         :root {
             --primary: #4299e1;
             --primary-dark: #3182ce;
@@ -744,6 +745,8 @@ if ($db) {
             display: flex;
             align-items: center;
             justify-content: center;
+            min-width: 28px;
+            min-height: 28px;
         }
 
         .copy-btn:active {
@@ -812,6 +815,18 @@ if ($db) {
 
         .modal-close:active {
             background: rgba(66, 153, 225, 0.1);
+        }
+
+        /* Modal para múltiples keys */
+        .modal-body .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .modal-body .form-full {
+            grid-column: 1 / -1;
         }
 
         /* Footer - Mobile Optimized */
@@ -1228,13 +1243,53 @@ if ($db) {
         </div>
     </div>
 
+    <!-- Modal para múltiples keys -->
+    <div id="multipleKeysModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Generar Keys Múltiples</h3>
+                <button class="modal-close" onclick="closeMultipleModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="form-full">
+                            <label for="multipleCount" class="form-label">Cantidad de Keys</label>
+                            <input type="number" id="multipleCount" placeholder="5" min="1" max="50" value="5">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div>
+                            <label for="multipleCredits" class="form-label">Créditos por Key</label>
+                            <input type="number" id="multipleCredits" placeholder="1000" min="100" max="100000" value="1000">
+                        </div>
+                        <div>
+                            <label for="multipleExpiry" class="form-label">Días de Validez</label>
+                            <input type="number" id="multipleExpiry" placeholder="30" min="1" max="365" value="30">
+                        </div>
+                    </div>
+                </div>
+                <div class="btn-group" style="margin-top: 1.5rem;">
+                    <button id="generateMultipleConfirmBtn" class="btn btn-success">
+                        <i class="fas fa-plus"></i>
+                        <span>Generar Keys</span>
+                    </button>
+                    <button onclick="closeMultipleModal()" class="btn btn-secondary">
+                        <i class="fas fa-times"></i>
+                        <span>Cancelar</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
     
     <script>
         // DATOS INICIALES DESDE PHP
         const initialUserData = {
-            username: '<?php echo $userData['username'] ?? ''; ?>',
-            email: '<?php echo $userData['email'] ?? ''; ?>', 
+            username: '<?php echo addslashes($userData['username'] ?? ''); ?>',
+            email: '<?php echo addslashes($userData['email'] ?? ''); ?>', 
             credits: <?php echo $userData['credits'] ?? 0; ?>,
             is_admin: <?php echo $isAdmin ? 'true' : 'false'; ?>,
             used_credits: <?php echo $usedCredits; ?>,
@@ -1264,7 +1319,7 @@ if ($db) {
             const keysTable = document.getElementById('keysTable');
             const usersTable = document.getElementById('usersTable');
             
-            // Elementos del modal
+            // Elementos del modal de usuario
             const editUserModal = document.getElementById('editUserModal');
             const modalClose = editUserModal.querySelector('.modal-close');
             const cancelEditBtn = document.getElementById('cancelEditBtn');
@@ -1274,6 +1329,10 @@ if ($db) {
             const editEmail = document.getElementById('editEmail');
             const editCredits = document.getElementById('editCredits');
             const editIsAdmin = document.getElementById('editIsAdmin');
+            
+            // Elementos del modal de múltiples keys
+            const multipleKeysModal = document.getElementById('multipleKeysModal');
+            const generateMultipleConfirmBtn = document.getElementById('generateMultipleConfirmBtn');
 
             // Mostrar sección de admin si corresponde
             if (initialUserData.is_admin) {
@@ -1299,8 +1358,9 @@ if ($db) {
 
             if (initialUserData.is_admin) {
                 generateKeyBtn.addEventListener('click', generateCreditKey);
-                generateMultipleBtn.addEventListener('click', generateMultipleKeys);
+                generateMultipleBtn.addEventListener('click', openMultipleKeysModal);
                 adminRefreshBtn.addEventListener('click', refreshAdminData);
+                generateMultipleConfirmBtn.addEventListener('click', generateMultipleCreditKeys);
             }
 
             // Modal events
@@ -1570,13 +1630,15 @@ if ($db) {
                     const statusClass = key.is_used ? 'status-inactive' : 'status-active';
                     const statusText = key.is_used ? 'Usada' : 'Activa';
                     const usedBy = key.used_by_username ? `por ${key.used_by_username}` : '';
+                    // Escapar caracteres especiales para JavaScript
+                    const safeKey = (key.credit_key || 'N/A').replace(/'/g, "\\'");
                     
                     html += `
                         <tr>
                             <td>
                                 <div style="display: flex; align-items: center; gap: 0.25rem; flex-wrap: wrap;">
                                     <span class="key-display">${key.credit_key || 'N/A'}</span>
-                                    <button class="copy-btn" onclick="copyToClipboard('${key.credit_key}')" title="Copiar">
+                                    <button class="copy-btn" onclick="copyToClipboard('${safeKey}')" title="Copiar">
                                         <i class="fas fa-copy"></i>
                                     </button>
                                 </div>
@@ -1586,7 +1648,7 @@ if ($db) {
                             <td><span class="status-badge ${statusClass}">${statusText}</span></td>
                             <td>
                                 <div class="table-actions">
-                                    <button onclick="deleteKey('${key.credit_key}')" class="btn btn-danger btn-xs">
+                                    <button onclick="deleteKey('${safeKey}')" class="btn btn-danger btn-xs">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
@@ -1613,6 +1675,9 @@ if ($db) {
                     
                     // Mostrar email abreviado para móviles
                     const shortEmail = user.email.length > 15 ? user.email.substring(0, 12) + '...' : user.email;
+                    // Escapar comillas simples para JavaScript
+                    const safeUsername = (user.username || '').replace(/'/g, "\\'");
+                    const safeEmail = (user.email || '').replace(/'/g, "\\'");
                     
                     html += `
                         <tr>
@@ -1621,7 +1686,7 @@ if ($db) {
                             <td style="color: ${creditColor}; font-weight: 600; font-size: 0.7rem;">${user.credits}</td>
                             <td>
                                 <div class="table-actions">
-                                    <button onclick="editUser(${user.id}, '${user.username}', '${user.email}', ${user.credits}, ${user.is_admin})" class="btn btn-secondary btn-xs">
+                                    <button onclick="editUser(${user.id}, '${safeUsername}', '${safeEmail}', ${user.credits}, ${user.is_admin})" class="btn btn-secondary btn-xs">
                                         <i class="fas fa-edit"></i>
                                     </button>
                                     <button onclick="resetPassword(${user.id})" class="btn btn-primary btn-xs">
@@ -1859,8 +1924,87 @@ if ($db) {
                 });
             }
 
-            function generateMultipleKeys() {
-                showToast('info', 'Próximamente', '#4299e1');
+            function openMultipleKeysModal() {
+                multipleKeysModal.style.display = 'flex';
+            }
+
+            window.closeMultipleModal = function() {
+                multipleKeysModal.style.display = 'none';
+                document.getElementById('multipleCount').value = '5';
+                document.getElementById('multipleCredits').value = '1000';
+                document.getElementById('multipleExpiry').value = '30';
+            }
+
+            function generateMultipleCreditKeys() {
+                const count = parseInt(document.getElementById('multipleCount').value);
+                const credits = parseInt(document.getElementById('multipleCredits').value);
+                const expiryDays = parseInt(document.getElementById('multipleExpiry').value);
+
+                if (!count || count < 1 || count > 50) {
+                    showToast('error', 'Cantidad inválida (1-50)', '#e53e3e');
+                    return;
+                }
+
+                if (!credits || credits < 100) {
+                    showToast('error', 'Mínimo 100 créditos', '#e53e3e');
+                    return;
+                }
+
+                generateMultipleConfirmBtn.disabled = true;
+                generateMultipleConfirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Generando...</span>';
+
+                const formData = new FormData();
+                formData.append('count', count);
+                formData.append('credits_amount', credits);
+                formData.append('expiry_days', expiryDays);
+
+                fetch('auth.php?action=create_multiple_keys', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast('success', `${count} keys generadas`, '#38a169');
+                        closeMultipleModal();
+                        loadRecentKeys();
+                        
+                        // Mostrar todas las keys generadas
+                        const keysList = data.keys.map(key => `<div style="background: rgba(0,0,0,0.3); padding: 0.5rem; margin: 0.25rem 0; border-radius: 6px; border: 1px solid var(--primary);">
+                            <code style="font-size: 0.8rem; color: var(--primary-light);">${key}</code>
+                        </div>`).join('');
+                        
+                        Swal.fire({
+                            title: 'Keys Generadas',
+                            html: `
+                                <div style="max-height: 300px; overflow-y: auto;">
+                                    <p style="margin-bottom: 1rem; color: var(--gray); font-size: 0.9rem;">${count} keys de ${credits} créditos</p>
+                                    ${keysList}
+                                    <p style="margin-top: 1rem; color: var(--gray); font-size: 0.8rem;">Puedes copiar cada key individualmente</p>
+                                </div>
+                            `,
+                            width: '90%',
+                            icon: 'success',
+                            confirmButtonText: 'Entendido',
+                            confirmButtonColor: '#4299e1',
+                            background: '#1a202c',
+                            color: '#ffffff',
+                            customClass: {
+                                container: 'mobile-swal'
+                            }
+                        });
+                    } else {
+                        showToast('error', data.message, '#e53e3e');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error generating multiple keys:', error);
+                    showToast('error', 'Error al generar keys', '#e53e3e');
+                })
+                .finally(() => {
+                    generateMultipleConfirmBtn.disabled = false;
+                    generateMultipleConfirmBtn.innerHTML = '<i class="fas fa-plus"></i><span>Generar Keys</span>';
+                });
             }
 
             function refreshAdminData() {
@@ -1902,14 +2046,41 @@ if ($db) {
                 });
             }
 
-            // Función para copiar al portapapeles
+            // Función para copiar al portapapeles - CORREGIDA
             window.copyToClipboard = function(text) {
-                navigator.clipboard.writeText(text).then(() => {
-                    showToast('success', 'Copiado', '#38a169');
-                }).catch(err => {
+                // Crear un elemento temporal para copiar
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                
+                // Seleccionar y copiar
+                textArea.focus();
+                textArea.select();
+                
+                try {
+                    const successful = document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    
+                    if (successful) {
+                        showToast('success', 'Copiado', '#38a169');
+                    } else {
+                        showToast('error', 'Error al copiar', '#e53e3e');
+                    }
+                } catch (err) {
                     console.error('Error al copiar:', err);
-                    showToast('error', 'Error al copiar', '#e53e3e');
-                });
+                    document.body.removeChild(textArea);
+                    
+                    // Fallback usando Clipboard API
+                    navigator.clipboard.writeText(text).then(() => {
+                        showToast('success', 'Copiado', '#38a169');
+                    }).catch(clipboardErr => {
+                        console.error('Error usando Clipboard API:', clipboardErr);
+                        showToast('error', 'Error al copiar', '#e53e3e');
+                    });
+                }
             };
 
             window.deleteKey = function(key) {
@@ -1953,6 +2124,13 @@ if ($db) {
                     }
                 });
             };
+
+            // Cerrar modal de múltiples keys al hacer clic fuera
+            multipleKeysModal.addEventListener('click', (e) => {
+                if (e.target === multipleKeysModal) {
+                    closeMultipleModal();
+                }
+            });
         });
     </script>
 </body>
