@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -168,17 +168,6 @@
             align-items: center;
         }
 
-        .btn-credits {
-            background: linear-gradient(135deg, var(--success), var(--success-dark));
-            color: white;
-            box-shadow: 0 12px 30px rgba(6, 214, 160, 0.4);
-        }
-
-        .btn-credits:hover {
-            box-shadow: 0 16px 40px rgba(6, 214, 160, 0.6);
-            transform: translateY(-2px);
-        }
-
         .btn-logout {
             background: linear-gradient(135deg, var(--error), var(--error-dark));
             color: white;
@@ -211,6 +200,38 @@
             justify-content: center;
             color: white;
             font-weight: bold;
+        }
+
+        /* Botón de menú */
+        .menu-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: var(--transition);
+            box-shadow: 0 12px 30px rgba(139, 92, 246, 0.4);
+        }
+
+        .menu-button:hover {
+            box-shadow: 0 16px 40px rgba(139, 92, 246, 0.6);
+            transform: translateY(-2px);
+        }
+
+        /* Botón de ayuda */
+        .btn-help {
+            background: linear-gradient(135deg, var(--info), var(--info-dark));
+            color: white;
+            box-shadow: 0 12px 30px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-help:hover {
+            box-shadow: 0 16px 40px rgba(59, 130, 246, 0.6);
+            transform: translateY(-2px);
         }
 
         /* Stats Section */
@@ -948,7 +969,7 @@
                 </div>
                 <div class="app-title">
                     <h1>GOKU-CHECKER</h1>
-                    
+                    <p>Validador de tarjetas de crédito</p>
                 </div>
             </div>
             <div class="app-actions">
@@ -957,23 +978,32 @@
                     <span id="creditsCount">0</span> créditos
                 </div>
                 
-                <!-- Nuevos botones de sesión -->
+                <!-- Botones de sesión -->
                 <div class="session-buttons" id="sessionButtons" style="display: none;">
                     <div class="user-info" id="userInfo">
                         <div class="user-avatar" id="userAvatar">U</div>
                         <span id="userName">Usuario</span>
                     </div>
-                    <!-- Menu Button - NUEVO -->
+                    
+                    <!-- Menu Button -->
                     <a href="dashboard_page.php" class="menu-button">
                         <i class="fas fa-bars"></i>
                         <span>Menú</span>
                     </a>
-                </div>
+                    
+                    <!-- Botón de cerrar sesión -->
                     <button id="logoutBtn" class="btn btn-logout">
                         <i class="fas fa-sign-out-alt"></i>
                         <span>Cerrar Sesión</span>
                     </button>
                 </div>
+                
+                <!-- Botón de ayuda -->
+                <button id="helpBtn" class="btn btn-help">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Ayuda</span>
+                </button>
+                
                 <div class="theme-switch-wrapper">
                     <div id="themeToggle" class="theme-switch">
                         <i class="fas fa-sun sun-icon"></i>
@@ -982,6 +1012,7 @@
                             <i class="fas fa-moon"></i>
                         </div>
                     </div>
+                </div>
             </div>
         </header>
 
@@ -1238,9 +1269,6 @@
             const helpBtn = document.getElementById('helpBtn');
             const creditsCount = document.getElementById('creditsCount');
             const userCreditsDisplay = document.getElementById('userCreditsDisplay');
-            
-            // Nuevos elementos
-            const creditsBtn = document.getElementById('creditsBtn');
             const logoutBtn = document.getElementById('logoutBtn');
             const sessionButtons = document.getElementById('sessionButtons');
             const userInfo = document.getElementById('userInfo');
@@ -1261,7 +1289,7 @@
             let hasActiveSession = false;
             let currentUser = null;
 
-            // ENDPOINTS ORIGINALES - MANTENIDOS EXACTAMENTE IGUAL
+            // ENDPOINTS ORIGINALES
             const gatewayEndpoints = {
                 'amazon_us': 'us.php',
                 'amazon_it': 'it.php',
@@ -1269,7 +1297,7 @@
                 'amazon_au': 'au.php',
                 'amazon_mx': 'mx.php',
                 'amazon_jp': 'jp.php',
-                "amazon_bussines" : "Amazonbnz.php"
+                'amazon_bussines': 'Amazonbnz.php'
             };
 
             // Cargar cookies guardadas si están disponibles
@@ -1277,7 +1305,7 @@
                 cookies.value = localStorage.getItem('amazonCookies');
             }
 
-            // ✅ MODIFICADO: Verificar sesión al cargar la página (SIN REDIRIGIR)
+            // Verificar sesión al cargar la página
             checkUserSession();
 
             // Funcionalidad del interruptor de tema
@@ -1309,44 +1337,15 @@
                 });
             });
 
-            // ✅ NUEVOS EVENT LISTENERS para los botones de sesión
-            creditsBtn.addEventListener('click', function() {
-                showCreditsModal();
-            });
+            // Event listener para cerrar sesión
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function() {
+                    logoutUser();
+                });
+            }
 
-            logoutBtn.addEventListener('click', function() {
-                logoutUser();
-            });
-
-            // ✅ MODIFICADO: Botón de inicio con verificación de sesión
+            // Botón de inicio
             startBtn.addEventListener('click', function() {
-                if (!hasActiveSession) {
-                    Swal.fire({
-                        title: 'Sesión Requerida',
-                        text: 'Debes iniciar sesión para usar el validador',
-                        icon: 'warning',
-                        confirmButtonText: 'Iniciar Sesión',
-                        cancelButtonText: 'Cancelar',
-                        showCancelButton: true
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            window.location.href = 'login.html';
-                        }
-                    });
-                    return;
-                }
-                
-                // Verificar créditos antes de iniciar
-                if (userCredits <= 0) {
-                    Swal.fire({
-                        title: 'Sin Créditos',
-                        text: 'No tienes créditos suficientes. Por favor, recarga tu cuenta.',
-                        icon: 'error',
-                        confirmButtonText: 'Entendido'
-                    });
-                    return;
-                }
-                
                 startChecking();
             });
 
@@ -1418,37 +1417,40 @@
                 });
             });
 
-            helpBtn.addEventListener('click', function() {
-                Swal.fire({
-                    title: 'Ayuda - Amazon Checker Pro',
-                    html: `
-                        <div style="text-align: left; margin-top: 1rem;">
-                            <h4 style="margin-bottom: 1rem;">Cómo usar el sistema:</h4>
-                            <ol style="padding-left: 1.5rem; margin-bottom: 1.5rem;">
-                                <li style="margin-bottom: 0.5rem;">Pegue su lista de tarjetas en el campo correspondiente</li>
-                                <li style="margin-bottom: 0.5rem;">Seleccione la pasarela de Amazon deseada</li>
-                                <li style="margin-bottom: 0.5rem;">Ingrese las cookies de sesión de Amazon</li>
-                                <li style="margin-bottom: 0.5rem;">Haga clic en "Iniciar Verificación"</li>
-                            </ol>
-                            <h4 style="margin-bottom: 0.5rem;">Sistema de Créditos:</h4>
-                            <ul style="padding-left: 1.5rem; margin-bottom: 1.5rem;">
-                                <li>✅ Cada verificación consume 1 crédito</li>
-                                <li>✅ Verifique que tenga créditos suficientes</li>
-                                <li>✅ Puede recargar créditos con claves</li>
-                            </ul>
-                            <p><strong>Formato de tarjetas:</strong> número|mes|año|cvv</p>
-                        </div>
-                    `,
-                    icon: 'info',
-                    confirmButtonText: 'Entendido',
-                    confirmButtonColor: '#8B5CF6',
-                    background: '#FFFFFF',
-                    color: '#1F2937',
-                    width: '600px'
+            // Botón de ayuda
+            if (helpBtn) {
+                helpBtn.addEventListener('click', function() {
+                    Swal.fire({
+                        title: 'Ayuda - Amazon Checker Pro',
+                        html: `
+                            <div style="text-align: left; margin-top: 1rem;">
+                                <h4 style="margin-bottom: 1rem;">Cómo usar el sistema:</h4>
+                                <ol style="padding-left: 1.5rem; margin-bottom: 1.5rem;">
+                                    <li style="margin-bottom: 0.5rem;">Pegue su lista de tarjetas en el campo correspondiente</li>
+                                    <li style="margin-bottom: 0.5rem;">Seleccione la pasarela de Amazon deseada</li>
+                                    <li style="margin-bottom: 0.5rem;">Ingrese las cookies de sesión de Amazon</li>
+                                    <li style="margin-bottom: 0.5rem;">Haga clic en "Iniciar Verificación"</li>
+                                </ol>
+                                <h4 style="margin-bottom: 0.5rem;">Sistema de Créditos:</h4>
+                                <ul style="padding-left: 1.5rem; margin-bottom: 1.5rem;">
+                                    <li>✅ Cada verificación consume 1 crédito</li>
+                                    <li>✅ Verifique que tenga créditos suficientes</li>
+                                    <li>✅ Puede recargar créditos con claves</li>
+                                </ul>
+                                <p><strong>Formato de tarjetas:</strong> número|mes|año|cvv</p>
+                            </div>
+                        `,
+                        icon: 'info',
+                        confirmButtonText: 'Entendido',
+                        confirmButtonColor: '#8B5CF6',
+                        background: '#FFFFFF',
+                        color: '#1F2937',
+                        width: '600px'
+                    });
                 });
-            });
+            }
 
-            // ✅ FUNCIÓN MODIFICADA: Verificar sesión SIN redirigir automáticamente
+            // Función: Verificar sesión
             function checkUserSession() {
                 fetch('auth.php?action=check_session')
                     .then(response => response.json())
@@ -1463,59 +1465,64 @@
                             updateUserInfo();
                             
                             // Mostrar botones de sesión
-                            sessionButtons.style.display = 'flex';
+                            if (sessionButtons) {
+                                sessionButtons.style.display = 'flex';
+                            }
                             
                             // Actualizar color según créditos
-                            if (userCredits <= 0) {
-                                userCreditsDisplay.style.background = 'var(--error)';
-                            } else if (userCredits < 10) {
-                                userCreditsDisplay.style.background = 'var(--warning)';
-                            } else {
-                                userCreditsDisplay.style.background = 'var(--primary)';
+                            if (userCreditsDisplay) {
+                                if (userCredits <= 0) {
+                                    userCreditsDisplay.style.background = 'var(--error)';
+                                } else if (userCredits < 10) {
+                                    userCreditsDisplay.style.background = 'var(--warning)';
+                                } else {
+                                    userCreditsDisplay.style.background = 'var(--primary)';
+                                }
                             }
                             
                             // Habilitar botón de inicio
                             startBtn.disabled = false;
                             
                         } else {
-                            // ❌ NO TIENE SESIÓN - Mostrar advertencia PERO NO REDIRIGIR
+                            // NO TIENE SESIÓN
                             hasActiveSession = false;
                             currentUser = null;
-                            userCreditsDisplay.classList.add('no-session');
-                            userCreditsDisplay.style.background = 'var(--error)';
-                            creditsCount.textContent = '0';
+                            
+                            if (userCreditsDisplay) {
+                                userCreditsDisplay.classList.add('no-session');
+                                userCreditsDisplay.style.background = 'var(--error)';
+                                creditsCount.textContent = '0';
+                                
+                                // Cambiar el mensaje de créditos
+                                userCreditsDisplay.innerHTML = '<i class="fas fa-sign-in-alt"></i> Inicia Sesión';
+                                
+                                // Al hacer clic, redirigir al login
+                                userCreditsDisplay.addEventListener('click', function() {
+                                    window.location.href = 'login.html';
+                                });
+                            }
                             
                             // Ocultar botones de sesión
-                            sessionButtons.style.display = 'none';
+                            if (sessionButtons) {
+                                sessionButtons.style.display = 'none';
+                            }
                             
                             // Deshabilitar botón de inicio
                             startBtn.disabled = true;
                             startBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i><span>Inicia Sesión</span>';
-                            
-                            // Cambiar el mensaje de créditos
-                            userCreditsDisplay.innerHTML = '<i class="fas fa-sign-in-alt"></i> Inicia Sesión';
-                            
-                            // Mostrar tooltip o mensaje
-                            userCreditsDisplay.title = "Haz clic para iniciar sesión";
-                            
-                            // Al hacer clic, redirigir al login
-                            userCreditsDisplay.addEventListener('click', function() {
-                                window.location.href = 'login.html';
-                            });
                             
                             showToast('warning', 'Inicia sesión para usar el validador');
                         }
                     })
                     .catch(error => {
                         console.error('Error verificando sesión:', error);
-                        // ❌ SOLO MOSTRAR ERROR, NO REDIRIGIR
                         showToast('error', 'Error de conexión al verificar sesión');
                     });
             }
 
-            // ✅ NUEVA FUNCIÓN: Actualizar información del usuario
+            // Función: Actualizar información del usuario
             function updateUserInfo() {
-                if (currentUser) {
+                if (currentUser && userAvatar && userName) {
                     // Mostrar inicial del nombre de usuario
                     const initial = currentUser.username ? currentUser.username.charAt(0).toUpperCase() : 'U';
                     userAvatar.textContent = initial;
@@ -1525,101 +1532,7 @@
                 }
             }
 
-            // ✅ NUEVA FUNCIÓN: Modal para recargar créditos
-            function showCreditsModal() {
-                Swal.fire({
-                    title: 'Recargar Créditos',
-                    html: `
-                        <div style="text-align: left; margin-top: 1rem;">
-                            <div class="form-group">
-                                <label for="creditKey" class="form-label">Clave de Recarga</label>
-                                <input type="text" id="creditKey" class="swal2-input" placeholder="Ingrese su clave de recarga">
-                            </div>
-                            <div style="background: var(--info-light); padding: 1rem; border-radius: 12px; margin-top: 1rem;">
-                                <h4 style="margin-bottom: 0.5rem; color: var(--info-dark);">💡 Información:</h4>
-                                <ul style="padding-left: 1.5rem; color: var(--info-dark);">
-                                    <li>Las claves se obtienen con el administrador</li>
-                                    <li>Cada clave tiene un número específico de créditos</li>
-                                    <li>Los créditos se agregan inmediatamente</li>
-                                </ul>
-                            </div>
-                        </div>
-                    `,
-                    icon: 'info',
-                    showCancelButton: true,
-                    confirmButtonText: 'Recargar',
-                    cancelButtonText: 'Cancelar',
-                    confirmButtonColor: '#06D6A0',
-                    cancelButtonColor: '#6B7280',
-                    background: '#FFFFFF',
-                    color: '#1F2937',
-                    preConfirm: () => {
-                        const key = document.getElementById('creditKey').value;
-                        if (!key) {
-                            Swal.showValidationMessage('Por favor ingrese una clave de recarga');
-                            return false;
-                        }
-                        return key;
-                    }
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        rechargeCredits(result.value);
-                    }
-                });
-            }
-
-            // ✅ NUEVA FUNCIÓN: Recargar créditos
-            function rechargeCredits(key) {
-                const formData = new FormData();
-                formData.append('key', key);
-
-                fetch('auth.php?action=recharge_credits', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        userCredits = data.new_balance;
-                        creditsCount.textContent = userCredits;
-                        
-                        // Actualizar color
-                        if (userCredits <= 0) {
-                            userCreditsDisplay.style.background = 'var(--error)';
-                        } else if (userCredits < 10) {
-                            userCreditsDisplay.style.background = 'var(--warning)';
-                        } else {
-                            userCreditsDisplay.style.background = 'var(--primary)';
-                        }
-                        
-                        Swal.fire({
-                            title: '¡Éxito!',
-                            text: `Se han agregado ${data.credits_added} créditos. Nuevo saldo: ${data.new_balance}`,
-                            icon: 'success',
-                            confirmButtonText: 'Aceptar',
-                            confirmButtonColor: '#06D6A0'
-                        });
-                    } else {
-                        Swal.fire({
-                            title: 'Error',
-                            text: data.message || 'Error al recargar créditos',
-                            icon: 'error',
-                            confirmButtonText: 'Aceptar'
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error recargando créditos:', error);
-                    Swal.fire({
-                        title: 'Error',
-                        text: 'Error de conexión al recargar créditos',
-                        icon: 'error',
-                        confirmButtonText: 'Aceptar'
-                    });
-                });
-            }
-
-            // ✅ NUEVA FUNCIÓN: Cerrar sesión
+            // Función: Cerrar sesión
             function logoutUser() {
                 Swal.fire({
                     title: 'Cerrar Sesión',
@@ -1657,77 +1570,6 @@
                 });
             }
 
-            // ✅ NUEVA FUNCIÓN: Verificar créditos antes de procesar
-            function checkCreditsBeforeProcessing(card) {
-                if (userCredits <= 0) {
-                    Swal.fire({
-                        title: 'Sin Créditos',
-                        text: 'No tienes créditos suficientes. Por favor, recarga tu cuenta.',
-                        icon: 'error',
-                        confirmButtonText: 'Entendido'
-                    }).then(() => {
-                        stopChecking();
-                    });
-                    return;
-                }
-
-                // Consumir crédito y proceder con la verificación
-                consumeCreditAndCheckCard(card);
-            }
-
-            // ✅ NUEVA FUNCIÓN: Consumir crédito y verificar tarjeta
-            function consumeCreditAndCheckCard(card) {
-                const formData = new FormData();
-                formData.append('consume', '1');
-
-                fetch('auth.php?action=consume_credit', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // ✅ Crédito consumido exitosamente
-                        userCredits = data.new_balance;
-                        creditsCount.textContent = userCredits;
-                        
-                        // Actualizar color
-                        if (userCredits <= 0) {
-                            userCreditsDisplay.style.background = 'var(--error)';
-                        } else if (userCredits < 10) {
-                            userCreditsDisplay.style.background = 'var(--warning)';
-                        }
-                        
-                        // Ahora proceder con la verificación de la tarjeta
-                        if (!isValidCardFormat(card)) {
-                            handleError(card, "Formato inválido. Use: Número|Mes|Año|CVV");
-                            currentIndex++;
-                            updateProgressBar((currentIndex / cards.length) * 100);
-                            setTimeout(checkNext, 100);
-                            return;
-                        }
-                        
-                        checkCardViaAjax(card);
-                        
-                    } else {
-                        // ❌ Error al consumir crédito
-                        Swal.fire({
-                            title: 'Error',
-                            text: data.message || 'Error al consumir crédito',
-                            icon: 'error',
-                            confirmButtonText: 'Entendido'
-                        }).then(() => {
-                            stopChecking();
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error consumiendo crédito:', error);
-                    showToast('error', 'Error al procesar crédito');
-                    stopChecking();
-                });
-            }
-
             // Funciones principales
             function startChecking() {
                 if (isRunning && !isPaused) return;
@@ -1750,7 +1592,7 @@
                         return;
                     }
                     
-                    // ✅ Verificar que tenga créditos suficientes para todas las tarjetas
+                    // Verificar que tenga créditos suficientes para todas las tarjetas
                     if (userCredits < cards.length) {
                         Swal.fire({
                             title: 'Créditos Insuficientes',
@@ -1794,8 +1636,84 @@
                     return;
                 }
                 
-                // ✅ Verificar créditos antes de procesar cada tarjeta
-                checkCreditsBeforeProcessing(card);
+                // Verificar créditos antes de procesar cada tarjeta
+                if (checkCreditsBeforeProcessing(card)) {
+                    processCard(card);
+                }
+            }
+
+            function checkCreditsBeforeProcessing(card) {
+                if (userCredits <= 0) {
+                    Swal.fire({
+                        title: 'Sin Créditos',
+                        text: 'No tienes créditos suficientes.',
+                        icon: 'error',
+                        confirmButtonText: 'Entendido'
+                    }).then(() => {
+                        stopChecking();
+                    });
+                    return false;
+                }
+                return true;
+            }
+
+            function processCard(card) {
+                if (!isValidCardFormat(card)) {
+                    handleError(card, "Formato inválido. Use: Número|Mes|Año|CVV");
+                    currentIndex++;
+                    updateProgressBar((currentIndex / cards.length) * 100);
+                    setTimeout(checkNext, 100);
+                    return;
+                }
+                
+                // Consumir crédito antes de procesar
+                consumeCreditAndCheckCard(card);
+            }
+
+            function consumeCreditAndCheckCard(card) {
+                const formData = new FormData();
+                formData.append('consume', '1');
+
+                fetch('auth.php?action=consume_credit', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Crédito consumido exitosamente
+                        userCredits = data.new_balance;
+                        creditsCount.textContent = userCredits;
+                        
+                        // Actualizar color
+                        if (userCreditsDisplay) {
+                            if (userCredits <= 0) {
+                                userCreditsDisplay.style.background = 'var(--error)';
+                            } else if (userCredits < 10) {
+                                userCreditsDisplay.style.background = 'var(--warning)';
+                            }
+                        }
+                        
+                        // Ahora proceder con la verificación de la tarjeta
+                        checkCardViaAjax(card);
+                        
+                    } else {
+                        // Error al consumir crédito
+                        Swal.fire({
+                            title: 'Error',
+                            text: data.message || 'Error al consumir crédito',
+                            icon: 'error',
+                            confirmButtonText: 'Entendido'
+                        }).then(() => {
+                            stopChecking();
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error consumiendo crédito:', error);
+                    showToast('error', 'Error al procesar crédito');
+                    stopChecking();
+                });
             }
 
             function pauseChecking() {

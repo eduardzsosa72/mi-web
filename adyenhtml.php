@@ -987,7 +987,7 @@ error_reporting(0);
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
     <script>
         var custo = "0";
-        var descricao_chk = "Checker ALLBINS PRE-AUTH (Gate Amazon)";
+        var descricao_chk = "CheckerADYEN";
         var audio = new Audio('live.mp3');
         var selectedApi = "";
         var threadCount = 1;
