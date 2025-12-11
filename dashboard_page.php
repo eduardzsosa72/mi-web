@@ -957,14 +957,10 @@ if ($db) {
                             <i class="fab fa-amazon"></i>
                             <span>AMAZON</span>
                         </a>
-                        <a href="gatepaypal.html" class="btn btn-paypal">
+                        <a href="adyenhtml.php" class="btn btn-paypal">
                             <i class="fab fa-paypal"></i>
-                            <span>PAYPAL</span>
+                            <span>ADYEN</span>
                            </a> 
-                        <a href="index3.html" class="btn btn-paypal">
-                            <i class="fab fa-paypal"></i>
-                            <span>GATE STRIPE</span>
-                        </a>
                         <button id="logoutBtn" class="btn btn-danger">
                             <i class="fas fa-sign-out-alt"></i>
                             <span>SALIR</span>
