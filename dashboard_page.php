@@ -971,10 +971,10 @@ if ($db) {
                         <a href="index.html" class="btn btn-amazon">
                             <i class="fab fa-amazon"></i>
                             <span>AMAZON</span>
-                        </a>
-                        <a href="adyenhtml.php" class="btn btn-paypal">
+                        <!--</a>
+                         <a href="adyenhtml.php" class="btn btn-paypal">
                             <i class="fab fa-paypal"></i>
-                            <span>ADYEN</span>
+                            <span>ADYEN</span> -->
                            </a> 
                         <button id="logoutBtn" class="btn btn-danger">
                             <i class="fas fa-sign-out-alt"></i>
