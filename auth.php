@@ -350,7 +350,7 @@ function handleRedeemKey() {
     }
 }
 
-// FUNCIÓN CREAR CLAVE (ADMIN)
+// FUNCIÓN CREAR CLAVE (ADMIN) - ACTUALIZADA SIN expiry_days
 function handleCreateCreditKey() {
     if (session_status() === PHP_SESSION_NONE) {
         session_start();
@@ -362,14 +362,9 @@ function handleCreateCreditKey() {
 
     $input = getInputData();
     $credits_amount = intval($input['credits_amount'] ?? 0);
-    $expiry_days = intval($input['expiry_days'] ?? 30);
 
     if ($credits_amount <= 0) {
         jsonResponse(false, 'La cantidad debe ser mayor a 0');
-    }
-
-    if ($expiry_days < 1) {
-        $expiry_days = 30;
     }
 
     $database = new Database();
@@ -383,12 +378,10 @@ function handleCreateCreditKey() {
         // Generar clave única
         $credit_key = 'CK-' . strtoupper(substr(md5(uniqid()), 0, 10)) . '-' . rand(1000, 9999);
         
-        $query = "INSERT INTO credit_keys (credit_key, credits_amount, expiry_days, created_by) 
-                  VALUES (:credit_key, :credits_amount, :expiry_days, :created_by)";
+        $query = "INSERT INTO credit_keys (credit_key, credits_amount, created_by) VALUES (:credit_key, :credits_amount, :created_by)";
         $stmt = $db->prepare($query);
         $stmt->bindParam(':credit_key', $credit_key);
         $stmt->bindParam(':credits_amount', $credits_amount);
-        $stmt->bindParam(':expiry_days', $expiry_days);
         $stmt->bindParam(':created_by', $_SESSION['user_id']);
 
         if ($stmt->execute()) {
@@ -404,7 +397,7 @@ function handleCreateCreditKey() {
     }
 }
 
-// FUNCIÓN CREAR MÚLTIPLES CLAVES (ADMIN)
+// FUNCIÓN CREAR MÚLTIPLES CLAVES (ADMIN) - ACTUALIZADA SIN expiry_days
 function handleCreateMultipleKeys() {
     if (session_status() === PHP_SESSION_NONE) {
         session_start();
@@ -417,7 +410,6 @@ function handleCreateMultipleKeys() {
     $input = getInputData();
     $count = intval($input['count'] ?? 0);
     $credits_amount = intval($input['credits_amount'] ?? 0);
-    $expiry_days = intval($input['expiry_days'] ?? 30);
 
     if ($count < 1 || $count > 50) {
         jsonResponse(false, 'La cantidad debe estar entre 1 y 50');
@@ -425,10 +417,6 @@ function handleCreateMultipleKeys() {
 
     if ($credits_amount <= 0) {
         jsonResponse(false, 'La cantidad de créditos debe ser mayor a 0');
-    }
-
-    if ($expiry_days < 1) {
-        $expiry_days = 30;
     }
 
     $database = new Database();
@@ -445,12 +433,11 @@ function handleCreateMultipleKeys() {
             // Generar clave única
             $credit_key = 'CK-' . strtoupper(substr(md5(uniqid() . $i), 0, 10)) . '-' . rand(1000, 9999);
             
-            $query = "INSERT INTO credit_keys (credit_key, credits_amount, expiry_days, created_by) 
-                      VALUES (:credit_key, :credits_amount, :expiry_days, :created_by)";
+            $query = "INSERT INTO credit_keys (credit_key, credits_amount, created_by) 
+                      VALUES (:credit_key, :credits_amount, :created_by)";
             $stmt = $db->prepare($query);
             $stmt->bindParam(':credit_key', $credit_key);
             $stmt->bindParam(':credits_amount', $credits_amount);
-            $stmt->bindParam(':expiry_days', $expiry_days);
             $stmt->bindParam(':created_by', $_SESSION['user_id']);
             
             if ($stmt->execute()) {
