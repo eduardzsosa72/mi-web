@@ -1,9 +1,10 @@
 <?php
 class Database {
-    private $host = "sql7.freesqldatabase.com";
-    private $dbname = "sql7810696";
-    private $username = "sql7810696";
-    private $password = "DETH4LtBij";
+    private $host = "gokucheker.ceheeiow0knm.us-east-1.rds.amazonaws.com";
+    private $dbname = "goku_checker";
+    private $username = "Admin";
+    private $password = "gokucheker123
+";
     public $conn;
 
     public function getConnection() {
