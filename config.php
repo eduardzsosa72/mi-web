@@ -3,8 +3,7 @@ class Database {
     private $host = "gokucheker.ceheeiow0knm.us-east-1.rds.amazonaws.com";
     private $dbname = "goku_checker";
     private $username = "Admin";
-    private $password = "gokucheker123
-";
+    private $password = "gokucheker123";
     public $conn;
 
     public function getConnection() {
