@@ -2,7 +2,7 @@
 class Database {
     private $host = "gokucheker.ceheeiow0knm.us-east-1.rds.amazonaws.com";
     private $dbname = "goku_checker";
-    private $username = "Admin";
+    private $username = "admin@ec2-52-8-112-233.us-west-1.compute.amazonaws.com";
     private $password = "gokucheker123";
     public $conn;
 
