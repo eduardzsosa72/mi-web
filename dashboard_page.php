@@ -1018,7 +1018,7 @@ if ($db) {
             <div class="app-logo">
                 <div class="app-logo-left">
                     <!-- Reemplaza "logo.jpg" con el nombre de tu archivo de logo -->
-                    <img src="logo.jpg" alt="888-CHECKER Logo" class="app-logo-img">
+                    <img src= "logo.png.jpg" alt="888-CHECKER Logo" class="app-logo-img">
                     <div class="app-title">
                         <h1>Dashboard</h1>
                         <p id="userRoleText">Panel de control</p>
