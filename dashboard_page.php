@@ -49,46 +49,54 @@ if ($db) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PANEL MENU | GOKU-CHECKER</title>
+    <title>PANEL MENU | 888-CHECKER</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Rubik:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css">
     <style>
-        /* Todos tus estilos CSS permanecen iguales... */
+        /* Estilos actualizados con tema verde */
         :root {
-            --primary: #4299e1;
-            --primary-dark: #3182ce;
-            --primary-light: #63b3ed;
-            --primary-lighter: #ebf8ff;
-            --secondary: #06D6A0;
-            --amazon: #FF9900;
-            --amazon-dark: #E68900;
-            --amazon-light: #FFD699;
-            --paypal: #003087;
-            --paypal-dark: #00256B;
-            --paypal-light: #CCD9F0;
-            --success: #38a169;
-            --success-dark: #2f855a;
-            --success-light: #9ae6b4;
-            --warning: #ed8936;
-            --warning-dark: #dd6b20;
-            --warning-light: #fed7d7;
-            --error: #e53e3e;
-            --error-dark: #c53030;
-            --error-light: #fed7d7;
-            --info: #4299e1;
-            --info-dark: #3182ce;
-            --info-light: #bee3f8;
-            --dark: #1a202c;
-            --darker: #111827;
-            --light: #f7fafc;
-            --gray: #718096;
-            --gray-light: #e2e8f0;
-            --card-bg: rgba(26, 32, 44, 0.95);
+            --primary: #10b981;
+            --primary-dark: #059669;
+            --primary-light: #34d399;
+            --primary-lighter: #d1fae5;
+            
+            --secondary: #34d399;
+            --amazon: #10b981;
+            --amazon-dark: #059669;
+            --amazon-light: #a7f3d0;
+            --paypal: #10b981;
+            --paypal-dark: #059669;
+            --paypal-light: #a7f3d0;
+            
+            --success: #10b981;
+            --success-dark: #059669;
+            --success-light: #a7f3d0;
+            
+            --warning: #f59e0b;
+            --warning-dark: #d97706;
+            --warning-light: #fde68a;
+            
+            --error: #ef4444;
+            --error-dark: #b91c1c;
+            --error-light: #fecaca;
+            
+            --info: #10b981;
+            --info-dark: #059669;
+            --info-light: #a7f3d0;
+            
+            --dark: #020617;
+            --darker: #000814;
+            --light: #e5e7eb;
+            --gray: #9ca3af;
+            --gray-light: #1f2937;
+            
+            --card-bg: rgba(2, 6, 23, 0.95);
             --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            
             --safe-top: env(safe-area-inset-top, 0px);
             --safe-bottom: env(safe-area-inset-bottom, 0px);
             --safe-left: env(safe-area-inset-left, 0px);
@@ -101,14 +109,20 @@ if ($db) {
         }
 
         @keyframes glow {
-            0%, 100% { box-shadow: 0 0 10px rgba(66, 153, 225, 0.4); }
-            50% { box-shadow: 0 0 20px rgba(66, 153, 225, 0.6); }
+            0%, 100% { box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
+            50% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.6); }
         }
 
         @keyframes pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.05); }
             100% { transform: scale(1); }
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         * {
@@ -121,7 +135,7 @@ if ($db) {
         }
 
         body {
-            background: linear-gradient(135deg, #141e30 0%, #243b55 100%);
+            background: radial-gradient(circle at center, #020617, #000814);
             color: var(--light);
             min-height: 100vh;
             min-height: -webkit-fill-available;
@@ -147,17 +161,31 @@ if ($db) {
             animation: fadeIn 0.5s ease-out;
         }
 
-        /* Header Styles - Mobile Optimized */
+        /* Header Styles - Tema verde */
         .app-header {
-            background: rgba(26, 32, 44, 0.95);
+            background: rgba(2, 6, 23, 0.95);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-radius: 20px;
             padding: 1.25rem;
             margin-bottom: 1.5rem;
             box-shadow: var(--card-shadow);
-            border: 1px solid rgba(66, 153, 225, 0.3);
+            border: 1px solid rgba(16, 185, 129, 0.3);
             animation: glow 3s infinite alternate;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .app-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light), var(--primary));
+            animation: gradient 3s ease infinite;
+            background-size: 200% 100%;
         }
 
         .app-logo {
@@ -174,28 +202,20 @@ if ($db) {
             width: 100%;
         }
 
-        .app-logo-icon {
-            width: 50px;
-            height: 50px;
-            min-width: 50px;
-            min-height: 50px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 6px 15px rgba(66, 153, 225, 0.4);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .app-logo-icon i {
-            font-size: 1.5rem;
-            color: white;
+        .app-logo-img {
+            width: 70px;
+            height: 70px;
+            min-width: 70px;
+            min-height: 70px;
+            border-radius: 16px;
+            object-fit: cover;
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.6);
+            border: 2px solid var(--primary);
         }
 
         .app-title {
             flex: 1;
-            min-width: 0; /* Para evitar overflow */
+            min-width: 0;
         }
 
         .app-title h1 {
@@ -209,6 +229,7 @@ if ($db) {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            text-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
         }
 
         .app-title p {
@@ -236,7 +257,7 @@ if ($db) {
 
         .user-credits {
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
+            color: var(--dark);
             padding: 0.6rem 1rem;
             border-radius: 12px;
             font-weight: 600;
@@ -244,7 +265,7 @@ if ($db) {
             align-items: center;
             gap: 0.5rem;
             border: 1px solid rgba(255, 255, 255, 0.15);
-            box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
             transition: var(--transition);
             font-size: 0.875rem;
             flex: 1;
@@ -253,11 +274,12 @@ if ($db) {
 
         .user-credits:hover {
             transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
         }
 
         .user-badge {
-            background: linear-gradient(135deg, var(--info), var(--info-dark));
-            color: white;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: var(--dark);
             padding: 0.5rem 0.875rem;
             border-radius: 10px;
             font-weight: 600;
@@ -270,7 +292,7 @@ if ($db) {
         }
 
         .admin-badge {
-            background: linear-gradient(135deg, var(--error), var(--error-dark));
+            background: linear-gradient(135deg, var(--warning), var(--warning-dark));
             color: white;
             padding: 0.5rem 0.875rem;
             border-radius: 10px;
@@ -290,7 +312,7 @@ if ($db) {
             width: 100%;
         }
 
-        /* Stats Grid - Mobile Optimized */
+        /* Stats Grid - Tema verde */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -306,7 +328,7 @@ if ($db) {
             transition: var(--transition);
             position: relative;
             overflow: hidden;
-            border: 1px solid rgba(66, 153, 225, 0.25);
+            border: 1px solid rgba(16, 185, 129, 0.25);
             animation: fadeIn 0.5s ease-out;
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
@@ -320,6 +342,8 @@ if ($db) {
             right: 0;
             height: 3px;
             background: linear-gradient(90deg, var(--primary), var(--primary-light));
+            animation: gradient 3s ease infinite;
+            background-size: 200% 100%;
         }
 
         .stat-card:active {
@@ -345,26 +369,31 @@ if ($db) {
             font-size: 1.25rem;
             border: 1px solid rgba(255, 255, 255, 0.1);
             background: rgba(255, 255, 255, 0.05);
+            color: white;
         }
 
         .stat-card.credits .stat-icon {
-            background: rgba(66, 153, 225, 0.15);
+            background: rgba(16, 185, 129, 0.2);
             color: var(--primary);
+            border-color: rgba(16, 185, 129, 0.3);
         }
 
         .stat-card.used .stat-icon {
-            background: rgba(56, 161, 105, 0.15);
+            background: rgba(16, 185, 129, 0.2);
             color: var(--success);
+            border-color: rgba(16, 185, 129, 0.3);
         }
 
         .stat-card.available .stat-icon {
-            background: rgba(237, 137, 54, 0.15);
-            color: var(--warning);
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--primary-light);
+            border-color: rgba(16, 185, 129, 0.3);
         }
 
         .stat-card.history .stat-icon {
-            background: rgba(66, 153, 225, 0.15);
+            background: rgba(16, 185, 129, 0.2);
             color: var(--info);
+            border-color: rgba(16, 185, 129, 0.3);
         }
 
         .stat-value {
@@ -373,6 +402,7 @@ if ($db) {
             margin-bottom: 0.25rem;
             color: var(--primary);
             line-height: 1.2;
+            text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
         }
 
         .stat-card.credits .stat-value {
@@ -384,7 +414,7 @@ if ($db) {
         }
 
         .stat-card.available .stat-value {
-            color: var(--warning);
+            color: var(--primary-light);
         }
 
         .stat-card.history .stat-value {
@@ -418,7 +448,7 @@ if ($db) {
             color: var(--warning-light);
         }
 
-        /* Main Content - Mobile Optimized */
+        /* Main Content */
         .main-content {
             display: flex;
             flex-direction: column;
@@ -426,7 +456,7 @@ if ($db) {
             margin-bottom: 1.5rem;
         }
 
-        /* Card Styles - Mobile Optimized */
+        /* Card Styles */
         .card {
             background: var(--card-bg);
             border-radius: 18px;
@@ -435,7 +465,7 @@ if ($db) {
             transition: var(--transition);
             position: relative;
             overflow: hidden;
-            border: 1px solid rgba(66, 153, 225, 0.25);
+            border: 1px solid rgba(16, 185, 129, 0.25);
             animation: fadeIn 0.5s ease-out;
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
@@ -449,6 +479,8 @@ if ($db) {
             right: 0;
             height: 4px;
             background: linear-gradient(90deg, var(--primary), var(--primary-light));
+            animation: gradient 3s ease infinite;
+            background-size: 200% 100%;
         }
 
         .card:active {
@@ -467,7 +499,7 @@ if ($db) {
             height: 50px;
             min-width: 50px;
             min-height: 50px;
-            background: rgba(66, 153, 225, 0.15);
+            background: rgba(16, 185, 129, 0.15);
             border-radius: 14px;
             display: flex;
             align-items: center;
@@ -475,7 +507,7 @@ if ($db) {
             color: var(--primary);
             font-size: 1.5rem;
             transition: var(--transition);
-            border: 1px solid rgba(66, 153, 225, 0.25);
+            border: 1px solid rgba(16, 185, 129, 0.25);
         }
 
         .card-title {
@@ -494,7 +526,7 @@ if ($db) {
             align-items: center;
         }
 
-        /* Form Elements - Mobile Optimized */
+        /* Form Elements */
         .form-group {
             margin-bottom: 1.25rem;
         }
@@ -510,7 +542,7 @@ if ($db) {
         input, select, textarea {
             width: 100%;
             background: rgba(0, 0, 0, 0.25);
-            border: 1px solid rgba(66, 153, 225, 0.3);
+            border: 1px solid rgba(16, 185, 129, 0.3);
             border-radius: 10px;
             color: var(--light);
             padding: 0.875rem 1rem;
@@ -524,7 +556,7 @@ if ($db) {
         input:focus, select:focus, textarea:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.2);
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
             background: rgba(0, 0, 0, 0.35);
         }
 
@@ -532,7 +564,7 @@ if ($db) {
             color: rgba(255, 255, 255, 0.5);
         }
 
-        /* Buttons - Mobile Optimized */
+        /* Buttons - Tema verde */
         .btn-group {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -570,26 +602,26 @@ if ($db) {
 
         .btn-primary {
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
-            box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
+            color: var(--dark);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         }
 
         .btn-amazon {
             background: linear-gradient(135deg, var(--amazon), var(--amazon-dark));
-            color: white;
-            box-shadow: 0 4px 12px rgba(255, 153, 0, 0.3);
+            color: var(--dark);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         }
 
         .btn-paypal {
             background: linear-gradient(135deg, var(--paypal), var(--paypal-dark));
-            color: white;
-            box-shadow: 0 4px 12px rgba(0, 48, 135, 0.3);
+            color: var(--dark);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         }
 
         .btn-success {
             background: linear-gradient(135deg, var(--success), var(--success-dark));
-            color: white;
-            box-shadow: 0 4px 12px rgba(56, 161, 105, 0.3);
+            color: var(--dark);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         }
 
         .btn-secondary {
@@ -621,7 +653,7 @@ if ($db) {
             transform: none !important;
         }
 
-        /* Admin Section - Mobile Optimized */
+        /* Admin Section */
         .admin-section {
             margin-bottom: 1.5rem;
             display: none;
@@ -632,12 +664,12 @@ if ($db) {
             animation: fadeIn 0.5s ease-out;
         }
 
-        /* Tables - Mobile Optimized */
+        /* Tables */
         .table-container {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
             border-radius: 12px;
-            border: 1px solid rgba(66, 153, 225, 0.2);
+            border: 1px solid rgba(16, 185, 129, 0.2);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
             margin-top: 1rem;
             background: rgba(0, 0, 0, 0.25);
@@ -647,13 +679,13 @@ if ($db) {
             width: 100%;
             border-collapse: collapse;
             background: transparent;
-            min-width: 600px; /* Para scroll horizontal en móviles */
+            min-width: 600px;
         }
 
         .data-table th {
             text-align: left;
             padding: 0.75rem;
-            background: rgba(66, 153, 225, 0.15);
+            background: rgba(16, 185, 129, 0.15);
             color: var(--primary-light);
             font-weight: 700;
             font-size: 0.75rem;
@@ -663,7 +695,7 @@ if ($db) {
 
         .data-table td {
             padding: 0.75rem;
-            border-bottom: 1px solid rgba(66, 153, 225, 0.15);
+            border-bottom: 1px solid rgba(16, 185, 129, 0.15);
             color: var(--light);
             font-size: 0.75rem;
             white-space: nowrap;
@@ -674,7 +706,7 @@ if ($db) {
         }
 
         .data-table tr:active td {
-            background: rgba(66, 153, 225, 0.08);
+            background: rgba(16, 185, 129, 0.08);
         }
 
         .table-actions {
@@ -694,19 +726,19 @@ if ($db) {
         }
 
         .status-active {
-            background: rgba(56, 161, 105, 0.2);
+            background: rgba(16, 185, 129, 0.2);
             color: var(--success-light);
             border-color: var(--success);
         }
 
         .status-inactive {
-            background: rgba(237, 137, 54, 0.2);
+            background: rgba(245, 158, 11, 0.2);
             color: var(--warning-light);
             border-color: var(--warning);
         }
 
         .status-admin {
-            background: rgba(229, 62, 62, 0.2);
+            background: rgba(239, 68, 68, 0.2);
             color: var(--error-light);
             border-color: var(--error);
         }
@@ -719,7 +751,7 @@ if ($db) {
             font-size: 0.875rem;
         }
 
-        /* Key styles - Mobile Optimized */
+        /* Key styles */
         .key-display {
             font-family: 'Courier New', monospace;
             background: rgba(0, 0, 0, 0.4);
@@ -735,7 +767,7 @@ if ($db) {
 
         .copy-btn {
             background: var(--primary);
-            color: white;
+            color: var(--dark);
             border: none;
             padding: 0.25rem 0.5rem;
             border-radius: 4px;
@@ -753,7 +785,7 @@ if ($db) {
             transform: scale(0.9);
         }
 
-        /* Modal - Mobile Optimized */
+        /* Modal */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -814,7 +846,7 @@ if ($db) {
         }
 
         .modal-close:active {
-            background: rgba(66, 153, 225, 0.1);
+            background: rgba(16, 185, 129, 0.1);
         }
 
         /* Modal para múltiples keys */
@@ -829,7 +861,7 @@ if ($db) {
             grid-column: 1 / -1;
         }
 
-        /* Footer - Mobile Optimized */
+        /* Footer */
         .app-footer {
             text-align: center;
             padding-top: 1.5rem;
@@ -850,6 +882,26 @@ if ($db) {
             text-decoration: none;
             font-weight: 600;
             transition: var(--transition);
+        }
+
+        .app-footer a:hover {
+            color: var(--primary-light);
+            text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+
+        .app-footer a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: width 0.3s ease;
+        }
+
+        .app-footer a:hover::after {
+            width: 100%;
         }
 
         /* Responsive adjustments */
@@ -900,6 +952,23 @@ if ($db) {
             }
         }
 
+        @media (max-width: 480px) {
+            .app-logo-left {
+                align-items: flex-start;
+            }
+            
+            .app-logo-img {
+                width: 60px;
+                height: 60px;
+                min-width: 60px;
+                min-height: 60px;
+            }
+            
+            .app-title h1 {
+                font-size: 1.2rem;
+            }
+        }
+
         /* Custom scrollbar */
         ::-webkit-scrollbar {
             width: 6px;
@@ -923,7 +992,7 @@ if ($db) {
 
         /* Selection */
         ::selection {
-            background: rgba(66, 153, 225, 0.3);
+            background: rgba(16, 185, 129, 0.3);
             color: white;
         }
 
@@ -948,9 +1017,8 @@ if ($db) {
         <header class="app-header">
             <div class="app-logo">
                 <div class="app-logo-left">
-                    <div class="app-logo-icon">
-                        <i class="fas fa-tachometer-alt"></i>
-                    </div>
+                    <!-- Reemplaza "logo.jpg" con el nombre de tu archivo de logo -->
+                    <img src="logo.jpg" alt="888-CHECKER Logo" class="app-logo-img">
                     <div class="app-title">
                         <h1>Dashboard</h1>
                         <p id="userRoleText">Panel de control</p>
@@ -969,13 +1037,9 @@ if ($db) {
                     </div>
                     <div class="nav-buttons">
                         <a href="index.html" class="btn btn-amazon">
-                            <i class="fab fa-amazon"></i>
-                            <span>AMAZON</span>
-                        <!--</a>
-                         <a href="adyenhtml.php" class="btn btn-paypal">
-                            <i class="fab fa-paypal"></i>
-                            <span>ADYEN</span> -->
-                           </a> 
+                            <i class="fas fa-shield-alt"></i>
+                            <span>VERIFICAR</span>
+                        </a>
                         <button id="logoutBtn" class="btn btn-danger">
                             <i class="fas fa-sign-out-alt"></i>
                             <span>SALIR</span>
@@ -1196,7 +1260,7 @@ if ($db) {
         <footer class="app-footer">
             <p>
                 Desarrollado con <i class="fas fa-heart heart-icon"></i> por 
-                <a href="#" target="_blank">GOKU-CHECKER</a>
+                <a href="#" target="_blank">888-CHECKER</a>
             </p>
         </footer>
     </div>
@@ -1460,7 +1524,7 @@ if ($db) {
                 const key = creditKey.value.trim();
                 
                 if (!key) {
-                    showToast('error', 'Ingresa una key', '#e53e3e');
+                    showToast('error', 'Ingresa una key', '#ef4444');
                     return;
                 }
 
@@ -1477,7 +1541,7 @@ if ($db) {
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        showToast('success', data.message, '#38a169');
+                        showToast('success', data.message, '#10b981');
                         creditKey.value = '';
                         
                         // Actualizar créditos en la interfaz
@@ -1495,12 +1559,12 @@ if ($db) {
                             document.getElementById('usedCredits').textContent = data.used_credits;
                         }
                     } else {
-                        showToast('error', data.message, '#e53e3e');
+                        showToast('error', data.message, '#ef4444');
                     }
                 })
                 .catch(error => {
                     console.error('Error redeeming key:', error);
-                    showToast('error', 'Error al procesar', '#e53e3e');
+                    showToast('error', 'Error al procesar', '#ef4444');
                 })
                 .finally(() => {
                     redeemBtn.disabled = false;
@@ -1539,11 +1603,11 @@ if ($db) {
                         }
                     }
                     
-                    showToast('success', 'Actualizado', '#38a169');
+                    showToast('success', 'Actualizado', '#10b981');
                 })
                 .catch(error => {
                     console.error('Error refreshing data:', error);
-                    showToast('error', 'Error al actualizar', '#e53e3e');
+                    showToast('error', 'Error al actualizar', '#ef4444');
                 })
                 .finally(() => {
                     refreshBtn.disabled = false;
@@ -1557,8 +1621,8 @@ if ($db) {
                     text: '¿Estás seguro?',
                     icon: 'question',
                     showCancelButton: true,
-                    confirmButtonColor: '#4299e1',
-                    cancelButtonColor: '#718096',
+                    confirmButtonColor: '#10b981',
+                    cancelButtonColor: '#9ca3af',
                     confirmButtonText: 'Sí',
                     cancelButtonText: 'No',
                     background: '#1a202c',
@@ -1599,7 +1663,7 @@ if ($db) {
                     })
                     .catch(error => {
                         console.error('Error loading keys:', error);
-                        showToast('error', 'Error cargando keys', '#e53e3e');
+                        showToast('error', 'Error cargando keys', '#ef4444');
                         keysTable.innerHTML = '<tr><td colspan="4" class="empty-message">Error</td></tr>';
                     });
             }
@@ -1614,7 +1678,7 @@ if ($db) {
                     })
                     .catch(error => {
                         console.error('Error loading users:', error);
-                        showToast('error', 'Error cargando usuarios', '#e53e3e');
+                        showToast('error', 'Error cargando usuarios', '#ef4444');
                         usersTable.innerHTML = '<tr><td colspan="4" class="empty-message">Error</td></tr>';
                     });
             }
@@ -1637,7 +1701,7 @@ if ($db) {
                         <tr>
                             <td>
                                 <div style="display: flex; align-items: center; gap: 0.25rem; flex-wrap: wrap;">
-                                    <span class="key-display">${key.credit_key || 'N/A'}</span>
+                                    <span class="key-display">${key.credit_key || 'N/A'}</td>
                                     <button class="copy-btn" onclick="copyToClipboard('${safeKey}')" title="Copiar">
                                         <i class="fas fa-copy"></i>
                                     </button>
@@ -1722,7 +1786,7 @@ if ($db) {
                 const isAdmin = editIsAdmin.value === '1';
 
                 if (!username || !email) {
-                    showToast('error', 'Completa todos los campos', '#e53e3e');
+                    showToast('error', 'Completa todos los campos', '#ef4444');
                     return;
                 }
 
@@ -1743,7 +1807,7 @@ if ($db) {
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        showToast('success', data.message, '#38a169');
+                        showToast('success', data.message, '#10b981');
                         closeModal();
                         loadUsers();
                         
@@ -1752,12 +1816,12 @@ if ($db) {
                             refreshUserData();
                         }
                     } else {
-                        showToast('error', data.message, '#e53e3e');
+                        showToast('error', data.message, '#ef4444');
                     }
                 })
                 .catch(error => {
                     console.error('Error updating user:', error);
-                    showToast('error', 'Error al guardar', '#e53e3e');
+                    showToast('error', 'Error al guardar', '#ef4444');
                 })
                 .finally(() => {
                     saveUserBtn.disabled = false;
@@ -1771,8 +1835,8 @@ if ($db) {
                     text: '¿Estás seguro?',
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: '#4299e1',
-                    cancelButtonColor: '#718096',
+                    confirmButtonColor: '#10b981',
+                    cancelButtonColor: '#9ca3af',
                     confirmButtonText: 'Sí',
                     cancelButtonText: 'No',
                     background: '#1a202c',
@@ -1792,14 +1856,14 @@ if ($db) {
                         .then(response => response.json())
                         .then(data => {
                             if (data.success) {
-                                showToast('success', data.message, '#38a169');
+                                showToast('success', data.message, '#10b981');
                             } else {
-                                showToast('error', data.message, '#e53e3e');
+                                showToast('error', data.message, '#ef4444');
                             }
                         })
                         .catch(error => {
                             console.error('Error resetting password:', error);
-                            showToast('error', 'Error al resetear', '#e53e3e');
+                            showToast('error', 'Error al resetear', '#ef4444');
                         });
                     }
                 });
@@ -1812,7 +1876,7 @@ if ($db) {
                     icon: 'error',
                     showCancelButton: true,
                     confirmButtonColor: '#EF4444',
-                    cancelButtonColor: '#718096',
+                    cancelButtonColor: '#9ca3af',
                     confirmButtonText: 'Eliminar',
                     cancelButtonText: 'Cancelar',
                     background: '#1a202c',
@@ -1829,309 +1893,309 @@ if ($db) {
                             method: 'POST',
                             body: formData
                         })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                showToast('success', data.message, '#38a169');
-                                loadUsers();
-                            } else {
-                                showToast('error', data.message, '#e53e3e');
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error deleting user:', error);
-                            showToast('error', 'Error al eliminar', '#e53e3e');
-                        });
-                    }
-                });
-            }
-
-            function closeModal() {
-                editUserModal.style.display = 'none';
-                editUserId.value = '';
-                editUsername.value = '';
-                editEmail.value = '';
-                editCredits.value = '';
-                editIsAdmin.value = '0';
-            }
-
-            function generateCreditKey() {
-                const credits = parseInt(keyCredits.value);
-                const expiryDays = parseInt(keyExpiry.value);
-
-                if (!credits || credits < 100) {
-                    showToast('error', 'Mínimo 100 créditos', '#e53e3e');
-                    return;
-                }
-
-                generateKeyBtn.disabled = true;
-                generateKeyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>...</span>';
-
-                const formData = new FormData();
-                formData.append('credits_amount', credits);
-                formData.append('expiry_days', expiryDays);
-
-                fetch('auth.php?action=create_credit_key', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showToast('success', 'Key generada', '#38a169');
-                        keyCredits.value = '';
-                        loadRecentKeys();
-                        
-                        // Mostrar la key completa
-                        Swal.fire({
-                            title: 'Key Generada',
-                            html: `
-                                <div style="text-align: center;">
-                                    <div style="background: rgba(0,0,0,0.5); padding: 1rem; border-radius: 8px; margin: 1rem 0; border: 1px solid var(--primary); word-break: break-all;">
-                                        <code style="font-size: 0.9rem; color: var(--primary-light);">${data.credit_key}</code>
-                                    </div>
-                                    <p style="font-size: 0.8rem; color: var(--gray);">Copia esta key</p>
-                                </div>
-                            `,
-                            icon: 'success',
-                            showCancelButton: true,
-                            confirmButtonText: 'Copiar',
-                            cancelButtonText: 'Cerrar',
-                            confirmButtonColor: '#4299e1',
-                            cancelButtonColor: '#718096',
-                            background: '#1a202c',
-                            color: '#ffffff',
-                            customClass: {
-                                container: 'mobile-swal'
-                            }
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                copyToClipboard(data.credit_key);
-                                showToast('success', 'Copiada', '#38a169');
-                            }
-                        });
-                    } else {
-                        showToast('error', data.message, '#e53e3e');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error generating key:', error);
-                    showToast('error', 'Error al generar', '#e53e3e');
-                })
-                .finally(() => {
-                    generateKeyBtn.disabled = false;
-                    generateKeyBtn.innerHTML = '<i class="fas fa-plus"></i><span>Generar</span>';
-                });
-            }
-
-            function openMultipleKeysModal() {
-                multipleKeysModal.style.display = 'flex';
-            }
-
-            window.closeMultipleModal = function() {
-                multipleKeysModal.style.display = 'none';
-                document.getElementById('multipleCount').value = '5';
-                document.getElementById('multipleCredits').value = '1000';
-                document.getElementById('multipleExpiry').value = '30';
-            }
-
-            function generateMultipleCreditKeys() {
-                const count = parseInt(document.getElementById('multipleCount').value);
-                const credits = parseInt(document.getElementById('multipleCredits').value);
-                const expiryDays = parseInt(document.getElementById('multipleExpiry').value);
-
-                if (!count || count < 1 || count > 50) {
-                    showToast('error', 'Cantidad inválida (1-50)', '#e53e3e');
-                    return;
-                }
-
-                if (!credits || credits < 100) {
-                    showToast('error', 'Mínimo 100 créditos', '#e53e3e');
-                    return;
-                }
-
-                generateMultipleConfirmBtn.disabled = true;
-                generateMultipleConfirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Generando...</span>';
-
-                const formData = new FormData();
-                formData.append('count', count);
-                formData.append('credits_amount', credits);
-                formData.append('expiry_days', expiryDays);
-
-                fetch('auth.php?action=create_multiple_keys', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showToast('success', `${count} keys generadas`, '#38a169');
-                        closeMultipleModal();
-                        loadRecentKeys();
-                        
-                        // Mostrar todas las keys generadas
-                        const keysList = data.keys.map(key => `<div style="background: rgba(0,0,0,0.3); padding: 0.5rem; margin: 0.25rem 0; border-radius: 6px; border: 1px solid var(--primary);">
-                            <code style="font-size: 0.8rem; color: var(--primary-light);">${key}</code>
-                        </div>`).join('');
-                        
-                        Swal.fire({
-                            title: 'Keys Generadas',
-                            html: `
-                                <div style="max-height: 300px; overflow-y: auto;">
-                                    <p style="margin-bottom: 1rem; color: var(--gray); font-size: 0.9rem;">${count} keys de ${credits} créditos</p>
-                                    ${keysList}
-                                    <p style="margin-top: 1rem; color: var(--gray); font-size: 0.8rem;">Puedes copiar cada key individualmente</p>
-                                </div>
-                            `,
-                            width: '90%',
-                            icon: 'success',
-                            confirmButtonText: 'Entendido',
-                            confirmButtonColor: '#4299e1',
-                            background: '#1a202c',
-                            color: '#ffffff',
-                            customClass: {
-                                container: 'mobile-swal'
-                            }
-                        });
-                    } else {
-                        showToast('error', data.message, '#e53e3e');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error generating multiple keys:', error);
-                    showToast('error', 'Error al generar keys', '#e53e3e');
-                })
-                .finally(() => {
-                    generateMultipleConfirmBtn.disabled = false;
-                    generateMultipleConfirmBtn.innerHTML = '<i class="fas fa-plus"></i><span>Generar Keys</span>';
-                });
-            }
-
-            function refreshAdminData() {
-                loadRecentKeys();
-                loadUsers();
-                showToast('success', 'Actualizado', '#38a169');
-            }
-
-            // Utilidades
-            function formatDateMobile(dateString) {
-                if (!dateString) return 'N/A';
-                const date = new Date(dateString);
-                return date.toLocaleDateString('es-ES', { 
-                    day: '2-digit', 
-                    month: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-            }
-
-            function showToast(icon, message, color = '#4299e1') {
-                const Toast = Swal.mixin({
-                    toast: true,
-                    position: 'top-end',
-                    showConfirmButton: false,
-                    timer: 2000,
-                    timerProgressBar: true,
-                    background: '#1a202c',
-                    color: '#ffffff',
-                    customClass: {
-                        container: 'mobile-toast'
-                    }
-                });
-                
-                Toast.fire({
-                    icon: icon,
-                    title: message,
-                    iconColor: color
-                });
-            }
-
-            // Función para copiar al portapapeles - CORREGIDA
-            window.copyToClipboard = function(text) {
-                // Crear un elemento temporal para copiar
-                const textArea = document.createElement('textarea');
-                textArea.value = text;
-                textArea.style.position = 'fixed';
-                textArea.style.left = '-999999px';
-                textArea.style.top = '-999999px';
-                document.body.appendChild(textArea);
-                
-                // Seleccionar y copiar
-                textArea.focus();
-                textArea.select();
-                
-                try {
-                    const successful = document.execCommand('copy');
-                    document.body.removeChild(textArea);
-                    
-                    if (successful) {
-                        showToast('success', 'Copiado', '#38a169');
-                    } else {
-                        showToast('error', 'Error al copiar', '#e53e3e');
-                    }
-                } catch (err) {
-                    console.error('Error al copiar:', err);
-                    document.body.removeChild(textArea);
-                    
-                    // Fallback usando Clipboard API
-                    navigator.clipboard.writeText(text).then(() => {
-                        showToast('success', 'Copiado', '#38a169');
-                    }).catch(clipboardErr => {
-                        console.error('Error usando Clipboard API:', clipboardErr);
-                        showToast('error', 'Error al copiar', '#e53e3e');
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showToast('success', data.message, '#10b981');
+                            loadUsers();
+                        } else {
+                            showToast('error', data.message, '#ef4444');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error deleting user:', error);
+                        showToast('error', 'Error al eliminar', '#ef4444');
                     });
                 }
-            };
+            });
+        }
 
-            window.deleteKey = function(key) {
-                Swal.fire({
-                    title: '¿Eliminar Key?',
-                    text: 'Esta acción no se puede deshacer',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#EF4444',
-                    cancelButtonColor: '#718096',
-                    confirmButtonText: 'Eliminar',
-                    cancelButtonText: 'Cancelar',
-                    background: '#1a202c',
-                    color: '#ffffff',
-                    customClass: {
-                        container: 'mobile-swal'
-                    }
-                }).then(async (result) => {
-                    if (result.isConfirmed) {
-                        try {
-                            const formData = new FormData();
-                            formData.append('key', key);
+        function closeModal() {
+            editUserModal.style.display = 'none';
+            editUserId.value = '';
+            editUsername.value = '';
+            editEmail.value = '';
+            editCredits.value = '';
+            editIsAdmin.value = '0';
+        }
 
-                            const response = await fetch('auth.php?action=delete_key', {
-                                method: 'POST',
-                                body: formData
-                            });
+        function generateCreditKey() {
+            const credits = parseInt(keyCredits.value);
+            const expiryDays = parseInt(keyExpiry.value);
 
-                            const data = await response.json();
+            if (!credits || credits < 100) {
+                showToast('error', 'Mínimo 100 créditos', '#ef4444');
+                return;
+            }
 
-                            if (data.success) {
-                                showToast('success', 'Key eliminada', '#38a169');
-                                loadRecentKeys();
-                            } else {
-                                showToast('error', data.message || 'Error', '#e53e3e');
-                            }
-                        } catch (error) {
-                            console.error('Error eliminando key:', error);
-                            showToast('error', 'Error de conexión', '#e53e3e');
+            generateKeyBtn.disabled = true;
+            generateKeyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>...</span>';
+
+            const formData = new FormData();
+            formData.append('credits_amount', credits);
+            formData.append('expiry_days', expiryDays);
+
+            fetch('auth.php?action=create_credit_key', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('success', 'Key generada', '#10b981');
+                    keyCredits.value = '';
+                    loadRecentKeys();
+                    
+                    // Mostrar la key completa
+                    Swal.fire({
+                        title: 'Key Generada',
+                        html: `
+                            <div style="text-align: center;">
+                                <div style="background: rgba(0,0,0,0.5); padding: 1rem; border-radius: 8px; margin: 1rem 0; border: 1px solid var(--primary); word-break: break-all;">
+                                    <code style="font-size: 0.9rem; color: var(--primary-light);">${data.credit_key}</code>
+                                </div>
+                                <p style="font-size: 0.8rem; color: var(--gray);">Copia esta key</p>
+                            </div>
+                        `,
+                        icon: 'success',
+                        showCancelButton: true,
+                        confirmButtonText: 'Copiar',
+                        cancelButtonText: 'Cerrar',
+                        confirmButtonColor: '#10b981',
+                        cancelButtonColor: '#9ca3af',
+                        background: '#1a202c',
+                        color: '#ffffff',
+                        customClass: {
+                            container: 'mobile-swal'
                         }
-                    }
-                });
-            };
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            copyToClipboard(data.credit_key);
+                            showToast('success', 'Copiada', '#10b981');
+                        }
+                    });
+                } else {
+                    showToast('error', data.message, '#ef4444');
+                }
+            })
+            .catch(error => {
+                console.error('Error generating key:', error);
+                showToast('error', 'Error al generar', '#ef4444');
+            })
+            .finally(() => {
+                generateKeyBtn.disabled = false;
+                generateKeyBtn.innerHTML = '<i class="fas fa-plus"></i><span>Generar</span>';
+            });
+        }
 
-            // Cerrar modal de múltiples keys al hacer clic fuera
-            multipleKeysModal.addEventListener('click', (e) => {
-                if (e.target === multipleKeysModal) {
+        function openMultipleKeysModal() {
+            multipleKeysModal.style.display = 'flex';
+        }
+
+        window.closeMultipleModal = function() {
+            multipleKeysModal.style.display = 'none';
+            document.getElementById('multipleCount').value = '5';
+            document.getElementById('multipleCredits').value = '1000';
+            document.getElementById('multipleExpiry').value = '30';
+        }
+
+        function generateMultipleCreditKeys() {
+            const count = parseInt(document.getElementById('multipleCount').value);
+            const credits = parseInt(document.getElementById('multipleCredits').value);
+            const expiryDays = parseInt(document.getElementById('multipleExpiry').value);
+
+            if (!count || count < 1 || count > 50) {
+                showToast('error', 'Cantidad inválida (1-50)', '#ef4444');
+                return;
+            }
+
+            if (!credits || credits < 100) {
+                showToast('error', 'Mínimo 100 créditos', '#ef4444');
+                return;
+            }
+
+            generateMultipleConfirmBtn.disabled = true;
+            generateMultipleConfirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Generando...</span>';
+
+            const formData = new FormData();
+            formData.append('count', count);
+            formData.append('credits_amount', credits);
+            formData.append('expiry_days', expiryDays);
+
+            fetch('auth.php?action=create_multiple_keys', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('success', `${count} keys generadas`, '#10b981');
                     closeMultipleModal();
+                    loadRecentKeys();
+                    
+                    // Mostrar todas las keys generadas
+                    const keysList = data.keys.map(key => `<div style="background: rgba(0,0,0,0.3); padding: 0.5rem; margin: 0.25rem 0; border-radius: 6px; border: 1px solid var(--primary);">
+                        <code style="font-size: 0.8rem; color: var(--primary-light);">${key}</code>
+                    </div>`).join('');
+                    
+                    Swal.fire({
+                        title: 'Keys Generadas',
+                        html: `
+                            <div style="max-height: 300px; overflow-y: auto;">
+                                <p style="margin-bottom: 1rem; color: var(--gray); font-size: 0.9rem;">${count} keys de ${credits} créditos</p>
+                                ${keysList}
+                                <p style="margin-top: 1rem; color: var(--gray); font-size: 0.8rem;">Puedes copiar cada key individualmente</p>
+                            </div>
+                        `,
+                        width: '90%',
+                        icon: 'success',
+                        confirmButtonText: 'Entendido',
+                        confirmButtonColor: '#10b981',
+                        background: '#1a202c',
+                        color: '#ffffff',
+                        customClass: {
+                            container: 'mobile-swal'
+                        }
+                    });
+                } else {
+                    showToast('error', data.message, '#ef4444');
+                }
+            })
+            .catch(error => {
+                console.error('Error generating multiple keys:', error);
+                showToast('error', 'Error al generar keys', '#ef4444');
+            })
+            .finally(() => {
+                generateMultipleConfirmBtn.disabled = false;
+                generateMultipleConfirmBtn.innerHTML = '<i class="fas fa-plus"></i><span>Generar Keys</span>';
+            });
+        }
+
+        function refreshAdminData() {
+            loadRecentKeys();
+            loadUsers();
+            showToast('success', 'Actualizado', '#10b981');
+        }
+
+        // Utilidades
+        function formatDateMobile(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('es-ES', { 
+                day: '2-digit', 
+                month: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function showToast(icon, message, color = '#10b981') {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true,
+                background: '#1a202c',
+                color: '#ffffff',
+                customClass: {
+                    container: 'mobile-toast'
                 }
             });
+            
+            Toast.fire({
+                icon: icon,
+                title: message,
+                iconColor: color
+            });
+        }
+
+        // Función para copiar al portapapeles
+        window.copyToClipboard = function(text) {
+            // Crear un elemento temporal para copiar
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            
+            // Seleccionar y copiar
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                if (successful) {
+                    showToast('success', 'Copiado', '#10b981');
+                } else {
+                    showToast('error', 'Error al copiar', '#ef4444');
+                }
+            } catch (err) {
+                console.error('Error al copiar:', err);
+                document.body.removeChild(textArea);
+                
+                // Fallback usando Clipboard API
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('success', 'Copiado', '#10b981');
+                }).catch(clipboardErr => {
+                    console.error('Error usando Clipboard API:', clipboardErr);
+                    showToast('error', 'Error al copiar', '#ef4444');
+                });
+            }
+        };
+
+        window.deleteKey = function(key) {
+            Swal.fire({
+                title: '¿Eliminar Key?',
+                text: 'Esta acción no se puede deshacer',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#EF4444',
+                cancelButtonColor: '#9ca3af',
+                confirmButtonText: 'Eliminar',
+                cancelButtonText: 'Cancelar',
+                background: '#1a202c',
+                color: '#ffffff',
+                customClass: {
+                    container: 'mobile-swal'
+                }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const formData = new FormData();
+                        formData.append('key', key);
+
+                        const response = await fetch('auth.php?action=delete_key', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            showToast('success', 'Key eliminada', '#10b981');
+                            loadRecentKeys();
+                        } else {
+                            showToast('error', data.message || 'Error', '#ef4444');
+                        }
+                    } catch (error) {
+                        console.error('Error eliminando key:', error);
+                        showToast('error', 'Error de conexión', '#ef4444');
+                    }
+                }
+            });
+        };
+
+        // Cerrar modal de múltiples keys al hacer clic fuera
+        multipleKeysModal.addEventListener('click', (e) => {
+            if (e.target === multipleKeysModal) {
+                closeMultipleModal();
+            }
         });
-    </script>
+    });
+</script>
 </body>
 </html>
