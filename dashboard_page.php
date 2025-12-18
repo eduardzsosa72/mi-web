@@ -215,7 +215,7 @@ if ($db) {
 
         .app-title {
             flex: 1;
-            min-width: 0;
+            min-width = 0;
         }
 
         .app-title h1 {
@@ -636,6 +636,21 @@ if ($db) {
             box-shadow: 0 4px 12px rgba(229, 62, 62, 0.3);
         }
 
+        .btn-stripe {
+            background: linear-gradient(135deg, #635bff, #5433ff);
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 91, 255, 0.3);
+        }
+
+        .btn-stripe:active {
+            transform: scale(0.95);
+        }
+
+        .btn-stripe:hover {
+            background: linear-gradient(135deg, #5433ff, #635bff);
+            box-shadow: 0 6px 20px rgba(99, 91, 255, 0.4);
+        }
+
         .btn-sm {
             padding: 0.5rem 0.75rem;
             font-size: 0.75rem;
@@ -1018,7 +1033,7 @@ if ($db) {
             <div class="app-logo">
                 <div class="app-logo-left">
                     <!-- Reemplaza "logo.jpg" con el nombre de tu archivo de logo -->
-                    <img src= "logo.png.jpg" alt="888-CHECKER Logo" class="app-logo-img">
+                    <img src="logo.png.jpg" alt="888-CHECKER Logo" class="app-logo-img">
                     <div class="app-title">
                         <h1>Dashboard</h1>
                         <p id="userRoleText">Panel de control</p>
@@ -1038,7 +1053,11 @@ if ($db) {
                     <div class="nav-buttons">
                         <a href="index.html" class="btn btn-amazon">
                             <i class="fas fa-shield-alt"></i>
-                            <span>VERIFICAR</span>
+                            <span>amazon</span>
+                        </a>
+                        <a href="chk.html" class="btn btn-stripe">
+                            <i class="fab fa-stripe-s"></i>
+                            <span>ccn</span>
                         </a>
                         <button id="logoutBtn" class="btn btn-danger">
                             <i class="fas fa-sign-out-alt"></i>
