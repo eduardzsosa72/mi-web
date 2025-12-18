@@ -1055,9 +1055,9 @@ if ($db) {
                             <i class="fas fa-shield-alt"></i>
                             <span>amazon</span>
                         </a>
-                        <a href="chk.html" class="btn btn-stripe">
+                       <!-- <a href="chk.html" class="btn btn-stripe">
                             <i class="fab fa-stripe-s"></i>
-                            <span>ccn</span>
+                            <span>ccn</span>-->
                         </a>
                         <button id="logoutBtn" class="btn btn-danger">
                             <i class="fas fa-sign-out-alt"></i>
