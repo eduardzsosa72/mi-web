@@ -1427,37 +1427,244 @@
             }
 
             // ========== FUNCIONES PRINCIPALES DEL CHECKER ==========
-            function startChecking() {
-                if (isChecking && !isPaused) return;
-                
-                if (!isPaused) {
-                    const list = cardList.value.trim();
-                    if (list === '') {
-                        showToast('error', 'Por favor, ingrese una lista de tarjetas.');
-                        return;
-                    }
-                    
-                    cards = list.split('\n').filter(line => line.trim() !== '');
-                    if (cards.length === 0) {
-                        showToast('error', 'No se encontraron tarjetas válidas.');
-                        return;
-                    }
-                    
-                    if (userCredits < cards.length) {
-                        Swal.fire({
-                            title: 'Créditos Insuficientes',
-                            text: `Necesitas ${cards.length} créditos pero solo tienes ${userCredits}.`,
-                            icon: 'warning',
-                            confirmButtonText: 'Entendido',
-                            background: '#1a202c',
-                            color: '#ffffff'
-                        });
-                        return;
-                    }
-                    
-                    currentIndex = 0;
-                    updateProgressBar(0);
-                }
+          
+                // ========== FUNCIONES PRINCIPALES DEL CHECKER ==========
+function startChecking() {
+    if (isChecking && !isPaused) return;
+    
+    if (!isPaused) {
+        const list = cardList.value.trim();
+        if (list === '') {
+            showToast('error', 'Por favor, ingrese una lista de tarjetas.');
+            return;
+        }
+        
+        cards = list.split('\n').filter(line => line.trim() !== '');
+        if (cards.length === 0) {
+            showToast('error', 'No se encontraron tarjetas válidas.');
+            return;
+        }
+        
+        if (userCredits < cards.length) {
+            Swal.fire({
+                title: 'Créditos Insuficientes',
+                text: `Necesitas ${cards.length} créditos pero solo tienes ${userCredits}.`,
+                icon: 'warning',
+                confirmButtonText: 'Entendido',
+                background: '#1a202c',
+                color: '#ffffff'
+            });
+            return;
+        }
+        
+        currentIndex = 0;
+        updateProgressBar(0);
+    }
+    
+    isChecking = true;
+    isPaused = false;
+    
+    startBtn.disabled = true;
+    pauseBtn.disabled = false;
+    stopBtn.disabled = false;
+    
+    showToast('success', '¡Verificación iniciada!');
+    
+    checkNext();
+}
+
+async function checkNext() {
+    if (!isChecking || isPaused) return;
+    
+    if (currentIndex >= cards.length) {
+        stopChecking();
+        showToast('success', '¡Verificación completada!');
+        return;
+    }
+    
+    const card = cards[currentIndex].trim();
+    if (card === '') {
+        currentIndex++;
+        setTimeout(checkNext, delay);
+        return;
+    }
+    
+    if (userCredits <= 0) {
+        showToast('error', 'Sin créditos disponibles');
+        stopChecking();
+        return;
+    }
+    
+    await processCard(card);
+}
+
+async function processCard(card) {
+    try {
+        const formData = new FormData();
+        formData.append('consume', '1');
+
+        const creditResponse = await fetch('auth.php?action=consume_credit', {
+            method: 'POST',
+            body: formData
+        });
+
+        const creditData = await creditResponse.json();
+
+        if (creditData.success) {
+            userCredits = creditData.new_balance;
+            creditsCount.textContent = userCredits;
+            updateCreditsColor();
+            
+            if (!isValidCardFormat(card)) {
+                handleError(card, "Formato inválido. Use: Número|Mes|Año|CVV o Número|Año|CVV");
+                currentIndex++;
+                updateProgressBar((currentIndex / cards.length) * 100);
+                setTimeout(checkNext, delay);
+                return;
+            }
+            
+            await checkCard(card);
+            
+        } else {
+            showToast('error', 'Error al consumir crédito');
+            stopChecking();
+        }
+    } catch (error) {
+        console.error('Error procesando tarjeta:', error);
+        handleError(card, "Error de procesamiento");
+        currentIndex++;
+        updateProgressBar((currentIndex / cards.length) * 100);
+        setTimeout(checkNext, delay);
+    }
+}
+
+async function checkCard(card) {
+    const endpoint = gatewaySelect.value === 'adyen_test' ? 'test-adyen.php' : 'base-adyen.php';
+    
+    // ENVIAR COMO PARÁMETRO GET, NO POST
+    try {
+        const url = `${endpoint}?lista=${encodeURIComponent(card)}`;
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error: ${response.status}`);
+        }
+        
+        // Intentar parsear como JSON
+        const data = await response.json();
+        
+        // Procesar respuesta de tu API
+        processAdyenResponse(card, data);
+        
+    } catch (error) {
+        // Si falla el JSON, puede que la API esté devolviendo HTML
+        console.error('Error en checkCard:', error);
+        
+        // Intentar obtener el texto de la respuesta
+        try {
+            const url = `${endpoint}?lista=${encodeURIComponent(card)}`;
+            const textResponse = await fetch(url);
+            const text = await textResponse.text();
+            
+            // Verificar si hay "APROVADA" o "REPROVADA" en el HTML
+            if (text.includes('APROVADA') || text.includes('Aprovada') || text.includes('Authorised')) {
+                approved.push({
+                    card: card,
+                    result: 'Aprobada - SHANGRI-LA'
+                });
+                updateApprovedTable();
+            } else if (text.includes('REPROVADA') || text.includes('Reprovada') || text.includes('Refused')) {
+                rejected.push({
+                    card: card,
+                    reason: 'Rechazada - SHANGRI-LA'
+                });
+                updateRejectedTable();
+            } else {
+                handleError(card, `Error: ${error.message}`);
+            }
+        } catch (secondError) {
+            handleError(card, `Error de conexión: ${error.message}`);
+        }
+    }
+    
+    currentIndex++;
+    updateProgressBar((currentIndex / cards.length) * 100);
+    setTimeout(checkNext, delay);
+}
+
+function processAdyenResponse(card, response) {
+    console.log('Respuesta de API:', response);
+    
+    // Tu API devuelve: {status, message, html, data}
+    if (response.status === 'approved') {
+        approved.push({
+            card: card,
+            result: response.message || 'Aprobada - SHANGRI-LA EXPRESS'
+        });
+        
+        updateApprovedTable();
+        
+    } else if (response.status === 'rejected') {
+        rejected.push({
+            card: card,
+            reason: response.message || 'Rechazada - SHANGRI-LA EXPRESS'
+        });
+        
+        updateRejectedTable();
+        
+    } else if (response.status === 'error') {
+        errors.push({
+            card: card,
+            error: response.message || 'Error en la API'
+        });
+        
+        updateErrorsTable();
+        
+    } else if (response.status === '3d_secure') {
+        // Manejar 3D Secure
+        rejected.push({
+            card: card,
+            reason: '3D Secure requerido - ' + (response.message || '')
+        });
+        
+        updateRejectedTable();
+        
+    } else {
+        // Respuesta no reconocida, revisar estructura
+        console.warn('Respuesta no reconocida:', response);
+        
+        // Intentar extraer información de html si existe
+        if (response.html) {
+            if (response.html.includes('APROVADA') || response.html.includes('✅ APROVADA')) {
+                approved.push({
+                    card: card,
+                    result: 'Aprobada (detectada en HTML)'
+                });
+                updateApprovedTable();
+            } else if (response.html.includes('REPROVADA') || response.html.includes('❌ REPROVADA')) {
+                rejected.push({
+                    card: card,
+                    reason: 'Rechazada (detectada en HTML)'
+                });
+                updateRejectedTable();
+            } else {
+                errors.push({
+                    card: card,
+                    error: 'Respuesta no reconocida: ' + (response.message || 'Sin mensaje')
+                });
+                updateErrorsTable();
+            }
+        } else {
+            errors.push({
+                card: card,
+                error: 'Respuesta no reconocida: ' + JSON.stringify(response).substring(0, 100)
+            });
+            updateErrorsTable();
+        }
+    }
+    
+  
+
                 
                 isChecking = true;
                 isPaused = false;
