@@ -1,9 +1,9 @@
 <?php
 class Database {
-    private $host = "gokucheker.ceheeiow0knm.us-east-1.rds.amazonaws.com";
+    private $host = "database-2.chss6me4w28s.mx-central-1.rds.amazonaws.com";
     private $dbname = "goku_checker";
     private $username = "admin";  // ← TU USUARIO REAL AQUÍ
-    private $password = "gokucheker123";
+    private $password = "Kraker13";
     public $conn;
 
     public function getConnection() {
