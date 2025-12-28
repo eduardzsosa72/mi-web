@@ -1149,729 +1149,797 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
     
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // ========== ELEMENTOS DEL DOM ==========
-            const userCreditsDisplay = document.getElementById('userCreditsDisplay');
-            const creditsCount = document.getElementById('creditsCount');
-            const sessionButtons = document.getElementById('sessionButtons');
-            const userInfo = document.getElementById('userInfo');
-            const userAvatar = document.getElementById('userAvatar');
-            const userName = document.getElementById('userName');
-            const logoutBtn = document.getElementById('logoutBtn');
-            
-            const startBtn = document.getElementById('startBtn');
-            const pauseBtn = document.getElementById('pauseBtn');
-            const stopBtn = document.getElementById('stopBtn');
-            const clearBtn = document.getElementById('clearBtn');
-            
-            const copyAllApproved = document.getElementById('copyAllApproved');
-            const clearApproved = document.getElementById('clearApproved');
-            const clearRejected = document.getElementById('clearRejected');
-            const clearErrors = document.getElementById('clearErrors');
-            
-            const cardList = document.getElementById('cardList');
-            const delayInput = document.getElementById('delayInput');
-            
-            const approvedCount = document.getElementById('approvedCount');
-            const rejectedCount = document.getElementById('rejectedCount');
-            const errorCount = document.getElementById('errorCount');
-            const approvedBadge = document.getElementById('approvedBadge');
-            const rejectedBadge = document.getElementById('rejectedBadge');
-            const errorsBadge = document.getElementById('errorsBadge');
-            
-            const progressBar = document.getElementById('progressBar');
-            const progressPercentage = document.getElementById('progressPercentage');
-            
-            const approvedTable = document.getElementById('approvedTable');
-            const rejectedTable = document.getElementById('rejectedTable');
-            const errorsTable = document.getElementById('errorsTable');
-            
-            const tabs = document.querySelectorAll('.tab');
-            const tabContents = document.querySelectorAll('.tab-content');
+    document.addEventListener('DOMContentLoaded', function() {
+        // ========== ELEMENTOS DEL DOM ==========
+        const userCreditsDisplay = document.getElementById('userCreditsDisplay');
+        const creditsCount = document.getElementById('creditsCount');
+        const sessionButtons = document.getElementById('sessionButtons');
+        const userInfo = document.getElementById('userInfo');
+        const userAvatar = document.getElementById('userAvatar');
+        const userName = document.getElementById('userName');
+        const logoutBtn = document.getElementById('logoutBtn');
+        
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        
+        const copyAllApproved = document.getElementById('copyAllApproved');
+        const clearApproved = document.getElementById('clearApproved');
+        const clearRejected = document.getElementById('clearRejected');
+        const clearErrors = document.getElementById('clearErrors');
+        
+        const cardList = document.getElementById('cardList');
+        const delayInput = document.getElementById('delayInput');
+        
+        const approvedCount = document.getElementById('approvedCount');
+        const rejectedCount = document.getElementById('rejectedCount');
+        const errorCount = document.getElementById('errorCount');
+        const approvedBadge = document.getElementById('approvedBadge');
+        const rejectedBadge = document.getElementById('rejectedBadge');
+        const errorsBadge = document.getElementById('errorsBadge');
+        
+        const progressBar = document.getElementById('progressBar');
+        const progressPercentage = document.getElementById('progressPercentage');
+        
+        const approvedTable = document.getElementById('approvedTable');
+        const rejectedTable = document.getElementById('rejectedTable');
+        const errorsTable = document.getElementById('errorsTable');
+        
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
 
-            // ========== VARIABLES DE ESTADO ==========
-            let isChecking = false;
-            let isPaused = false;
-            let currentIndex = 0;
-            let cards = [];
-            let approved = [];
-            let rejected = [];
-            let errors = [];
-            let checkInterval = null;
-            let currentRequest = null;
-            let delay = 500;
+        // ========== VARIABLES DE ESTADO ==========
+        let isChecking = false;
+        let isPaused = false;
+        let currentIndex = 0;
+        let cards = [];
+        let approved = [];
+        let rejected = [];
+        let errors = [];
+        let checkInterval = null;
+        let currentRequest = null;
+        let delay = 500;
+        
+        let userCredits = 0;
+        let hasActiveSession = false;
+        let currentUser = null;
+
+        // ========== INICIALIZACIÓN ==========
+        initializeApp();
+
+        async function initializeApp() {
+            // Configurar delay inicial
+            delay = parseInt(delayInput.value) || 500;
+            delayInput.addEventListener('change', function() {
+                delay = parseInt(this.value) || 500;
+            });
             
-            let userCredits = 0;
-            let hasActiveSession = false;
-            let currentUser = null;
+            await checkUserSession();
+            setupEventListeners();
+        }
 
-            // ========== INICIALIZACIÓN ==========
-            initializeApp();
-
-            async function initializeApp() {
-                // Configurar delay inicial
-                delay = parseInt(delayInput.value) || 500;
-                delayInput.addEventListener('change', function() {
-                    delay = parseInt(this.value) || 500;
-                });
-                
-                await checkUserSession();
-                setupEventListeners();
-            }
-
-            // ========== CONFIGURACIÓN DE EVENTOS ==========
-            function setupEventListeners() {
-                logoutBtn.addEventListener('click', logoutUser);
-                
-                tabs.forEach(tab => {
-                    tab.addEventListener('click', function() {
-                        const tabId = this.getAttribute('data-tab');
-                        
-                        tabs.forEach(t => t.classList.remove('active'));
-                        tabContents.forEach(c => c.classList.remove('active'));
-                        
-                        this.classList.add('active');
-                        document.getElementById(`${tabId}Content`).classList.add('active');
-                    });
-                });
-
-                startBtn.addEventListener('click', function() {
-                    if (!hasActiveSession) {
-                        showLoginRequired();
-                        return;
-                    }
+        // ========== CONFIGURACIÓN DE EVENTOS ==========
+        function setupEventListeners() {
+            logoutBtn.addEventListener('click', logoutUser);
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
                     
-                    if (userCredits <= 0) {
-                        showNoCreditsWarning();
-                        return;
-                    }
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(c => c.classList.remove('active'));
                     
-                    startChecking();
+                    this.classList.add('active');
+                    document.getElementById(`${tabId}Content`).classList.add('active');
                 });
-                
-                pauseBtn.addEventListener('click', pauseChecking);
-                stopBtn.addEventListener('click', stopChecking);
-                clearBtn.addEventListener('click', clearAll);
-                
-                copyAllApproved.addEventListener('click', copyAllApprovedResults);
-                clearApproved.addEventListener('click', () => clearResults('approved'));
-                clearRejected.addEventListener('click', () => clearResults('rejected'));
-                clearErrors.addEventListener('click', () => clearResults('errors'));
-                
-                cardList.addEventListener('keypress', function(e) {
-                    if (e.ctrlKey && e.key === 'Enter') {
-                        startBtn.click();
-                    }
-                });
-            }
+            });
 
-            // ========== FUNCIONES DE SESIÓN ==========
-            async function checkUserSession() {
-                try {
-                    const response = await fetch('auth.php?action=check_session');
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        hasActiveSession = true;
-                        userCredits = data.user.credits || 0;
-                        currentUser = data.user;
-                        
-                        updateUserUI();
-                        
-                        startBtn.disabled = false;
-                        startBtn.innerHTML = '<i class="fas fa-play"></i><span>Iniciar Verificación</span>';
-                        
-                    } else {
-                        hasActiveSession = false;
-                        currentUser = null;
-                        
-                        updateNoSessionUI();
-                        
-                        startBtn.disabled = true;
-                        startBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i><span>Inicia Sesión</span>';
-                    }
-                } catch (error) {
-                    console.error('Error verificando sesión:', error);
-                    showToast('error', 'Error de conexión al verificar sesión');
-                }
-            }
-
-            function updateUserUI() {
-                creditsCount.textContent = userCredits;
-                updateCreditsColor();
-                sessionButtons.style.display = 'flex';
-                
-                if (currentUser) {
-                    const initial = currentUser.username ? currentUser.username.charAt(0).toUpperCase() : 'U';
-                    userAvatar.textContent = initial;
-                    userName.textContent = currentUser.username || 'Usuario';
+            startBtn.addEventListener('click', function() {
+                if (!hasActiveSession) {
+                    showLoginRequired();
+                    return;
                 }
                 
-                userCreditsDisplay.classList.remove('no-session');
-                userCreditsDisplay.style.cursor = 'default';
-                userCreditsDisplay.title = '';
-                userCreditsDisplay.removeEventListener('click', redirectToLogin);
-            }
-
-            function updateNoSessionUI() {
-                creditsCount.textContent = '0';
-                userCreditsDisplay.classList.add('no-session');
-                userCreditsDisplay.style.cursor = 'pointer';
-                userCreditsDisplay.title = "Haz clic para iniciar sesión";
-                sessionButtons.style.display = 'none';
-                userCreditsDisplay.addEventListener('click', redirectToLogin);
-            }
-
-            function redirectToLogin() {
-                window.location.href = 'login.html';
-            }
-
-            function updateCreditsColor() {
                 if (userCredits <= 0) {
-                    userCreditsDisplay.style.background = 'linear-gradient(135deg, var(--error), var(--error-dark))';
-                } else if (userCredits < 10) {
-                    userCreditsDisplay.style.background = 'linear-gradient(135deg, var(--warning), var(--warning-dark))';
+                    showNoCreditsWarning();
+                    return;
+                }
+                
+                startChecking();
+            });
+            
+            pauseBtn.addEventListener('click', pauseChecking);
+            stopBtn.addEventListener('click', stopChecking);
+            clearBtn.addEventListener('click', clearAll);
+            
+            copyAllApproved.addEventListener('click', copyAllApprovedResults);
+            clearApproved.addEventListener('click', () => clearResults('approved'));
+            clearRejected.addEventListener('click', () => clearResults('rejected'));
+            clearErrors.addEventListener('click', () => clearResults('errors'));
+            
+            cardList.addEventListener('keypress', function(e) {
+                if (e.ctrlKey && e.key === 'Enter') {
+                    startBtn.click();
+                }
+            });
+        }
+
+        // ========== FUNCIONES DE SESIÓN ==========
+        async function checkUserSession() {
+            try {
+                const response = await fetch('auth.php?action=check_session');
+                const data = await response.json();
+                
+                if (data.success) {
+                    hasActiveSession = true;
+                    userCredits = data.user.credits || 0;
+                    currentUser = data.user;
+                    
+                    updateUserUI();
+                    
+                    startBtn.disabled = false;
+                    startBtn.innerHTML = '<i class="fas fa-play"></i><span>Iniciar Verificación</span>';
+                    
                 } else {
-                    userCreditsDisplay.style.background = 'linear-gradient(135deg, var(--primary), var(--primary-dark))';
+                    hasActiveSession = false;
+                    currentUser = null;
+                    
+                    updateNoSessionUI();
+                    
+                    startBtn.disabled = true;
+                    startBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i><span>Inicia Sesión</span>';
                 }
+            } catch (error) {
+                console.error('Error verificando sesión:', error);
+                showToast('error', 'Error de conexión al verificar sesión');
             }
+        }
 
-            function showLoginRequired() {
-                Swal.fire({
-                    title: 'Sesión Requerida',
-                    text: 'Debes iniciar sesión para usar el validador',
-                    icon: 'warning',
-                    confirmButtonText: 'Iniciar Sesión',
-                    cancelButtonText: 'Cancelar',
-                    showCancelButton: true,
-                    confirmButtonColor: '#10b981',
-                    cancelButtonColor: '#9ca3af',
-                    background: '#1a202c',
-                    color: '#ffffff'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.href = 'login.html';
-                    }
-                });
+        function updateUserUI() {
+            creditsCount.textContent = userCredits;
+            updateCreditsColor();
+            sessionButtons.style.display = 'flex';
+            
+            if (currentUser) {
+                const initial = currentUser.username ? currentUser.username.charAt(0).toUpperCase() : 'U';
+                userAvatar.textContent = initial;
+                userName.textContent = currentUser.username || 'Usuario';
             }
+            
+            userCreditsDisplay.classList.remove('no-session');
+            userCreditsDisplay.style.cursor = 'default';
+            userCreditsDisplay.title = '';
+            userCreditsDisplay.removeEventListener('click', redirectToLogin);
+        }
 
-            function showNoCreditsWarning() {
-                Swal.fire({
-                    title: 'Sin Créditos',
-                    text: 'No tienes créditos suficientes.',
-                    icon: 'error',
-                    confirmButtonText: 'Entendido',
-                    confirmButtonColor: '#10b981',
-                    background: '#1a202c',
-                    color: '#ffffff'
-                });
+        function updateNoSessionUI() {
+            creditsCount.textContent = '0';
+            userCreditsDisplay.classList.add('no-session');
+            userCreditsDisplay.style.cursor = 'pointer';
+            userCreditsDisplay.title = "Haz clic para iniciar sesión";
+            sessionButtons.style.display = 'none';
+            userCreditsDisplay.addEventListener('click', redirectToLogin);
+        }
+
+        function redirectToLogin() {
+            window.location.href = 'login.html';
+        }
+
+        function updateCreditsColor() {
+            if (userCredits <= 0) {
+                userCreditsDisplay.style.background = 'linear-gradient(135deg, var(--error), var(--error-dark))';
+            } else if (userCredits < 10) {
+                userCreditsDisplay.style.background = 'linear-gradient(135deg, var(--warning), var(--warning-dark))';
+            } else {
+                userCreditsDisplay.style.background = 'linear-gradient(135deg, var(--primary), var(--primary-dark))';
             }
+        }
 
-            async function logoutUser() {
-                const result = await Swal.fire({
-                    title: 'Cerrar Sesión',
-                    text: '¿Estás seguro de que deseas cerrar sesión?',
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'Sí, cerrar sesión',
-                    cancelButtonText: 'Cancelar',
-                    confirmButtonColor: '#e53e3e',
-                    cancelButtonColor: '#718096',
-                    background: '#1a202c',
-                    color: '#ffffff'
-                });
-
+        function showLoginRequired() {
+            Swal.fire({
+                title: 'Sesión Requerida',
+                text: 'Debes iniciar sesión para usar el validador',
+                icon: 'warning',
+                confirmButtonText: 'Iniciar Sesión',
+                cancelButtonText: 'Cancelar',
+                showCancelButton: true,
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#9ca3af',
+                background: '#1a202c',
+                color: '#ffffff'
+            }).then((result) => {
                 if (result.isConfirmed) {
-                    try {
-                        const response = await fetch('auth.php?action=logout', {
-                            method: 'POST'
-                        });
-
-                        const data = await response.json();
-
-                        if (data.success) {
-                            showToast('success', 'Sesión cerrada correctamente');
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 1500);
-                        } else {
-                            showToast('error', 'Error al cerrar sesión');
-                        }
-                    } catch (error) {
-                        console.error('Error cerrando sesión:', error);
-                        showToast('error', 'Error de conexión al cerrar sesión');
-                    }
+                    window.location.href = 'login.html';
                 }
-            }
+            });
+        }
 
-            // ========== FUNCIONES PRINCIPALES DEL CHECKER ==========
-            function startChecking() {
-                if (isChecking && !isPaused) return;
-                
-                if (!isPaused) {
-                    const list = cardList.value.trim();
-                    if (list === '') {
-                        showToast('error', 'Por favor, ingrese una lista de tarjetas.');
-                        return;
-                    }
-                    
-                    cards = list.split('\n').filter(line => line.trim() !== '');
-                    if (cards.length === 0) {
-                        showToast('error', 'No se encontraron tarjetas válidas.');
-                        return;
-                    }
-                    
-                    if (userCredits < cards.length) {
-                        Swal.fire({
-                            title: 'Créditos Insuficientes',
-                            text: `Necesitas ${cards.length} créditos pero solo tienes ${userCredits}.`,
-                            icon: 'warning',
-                            confirmButtonText: 'Entendido',
-                            background: '#1a202c',
-                            color: '#ffffff'
-                        });
-                        return;
-                    }
-                    
-                    currentIndex = 0;
-                    updateProgressBar(0);
-                }
-                
-                isChecking = true;
-                isPaused = false;
-                
-                startBtn.disabled = true;
-                pauseBtn.disabled = false;
-                stopBtn.disabled = false;
-                
-                showToast('success', '¡Verificación iniciada!');
-                
-                checkNext();
-            }
+        function showNoCreditsWarning() {
+            Swal.fire({
+                title: 'Sin Créditos',
+                text: 'No tienes créditos suficientes.',
+                icon: 'error',
+                confirmButtonText: 'Entendido',
+                confirmButtonColor: '#10b981',
+                background: '#1a202c',
+                color: '#ffffff'
+            });
+        }
 
-            async function checkNext() {
-                if (!isChecking || isPaused) return;
-                
-                if (currentIndex >= cards.length) {
-                    stopChecking();
-                    showToast('success', '¡Verificación completada!');
-                    return;
-                }
-                
-                const card = cards[currentIndex].trim();
-                if (card === '') {
-                    currentIndex++;
-                    setTimeout(checkNext, delay);
-                    return;
-                }
-                
-                if (userCredits <= 0) {
-                    showToast('error', 'Sin créditos disponibles');
-                    stopChecking();
-                    return;
-                }
-                
-                await processCard(card);
-            }
+        async function logoutUser() {
+            const result = await Swal.fire({
+                title: 'Cerrar Sesión',
+                text: '¿Estás seguro de que deseas cerrar sesión?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, cerrar sesión',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#e53e3e',
+                cancelButtonColor: '#718096',
+                background: '#1a202c',
+                color: '#ffffff'
+            });
 
-            async function processCard(card) {
+            if (result.isConfirmed) {
                 try {
-                    const formData = new FormData();
-                    formData.append('consume', '1');
-
-                    const creditResponse = await fetch('auth.php?action=consume_credit', {
-                        method: 'POST',
-                        body: formData
+                    const response = await fetch('auth.php?action=logout', {
+                        method: 'POST'
                     });
 
-                    const creditData = await creditResponse.json();
+                    const data = await response.json();
 
-                    if (creditData.success) {
-                        userCredits = creditData.new_balance;
-                        creditsCount.textContent = userCredits;
-                        updateCreditsColor();
-                        
-                        if (!isValidCardFormat(card)) {
-                            handleError(card, "Formato inválido. Use: Número|Mes|Año|CVV o Número|Año|CVV");
-                            currentIndex++;
-                            updateProgressBar((currentIndex / cards.length) * 100);
-                            setTimeout(checkNext, delay);
-                            return;
-                        }
-                        
-                        await checkCard(card);
-                        
+                    if (data.success) {
+                        showToast('success', 'Sesión cerrada correctamente');
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
                     } else {
-                        showToast('error', 'Error al consumir crédito');
-                        stopChecking();
+                        showToast('error', 'Error al cerrar sesión');
                     }
                 } catch (error) {
-                    console.error('Error procesando tarjeta:', error);
-                    handleError(card, "Error de procesamiento");
-                    currentIndex++;
-                    updateProgressBar((currentIndex / cards.length) * 100);
-                    setTimeout(checkNext, delay);
+                    console.error('Error cerrando sesión:', error);
+                    showToast('error', 'Error de conexión al cerrar sesión');
                 }
             }
+        }
 
-            async function checkCard(card) {
-                try {
-                    const url = `base-adyen.php?lista=${encodeURIComponent(card)}`;
-                    
-                    const response = await fetch(url);
-                    
-                    if (!response.ok) {
-                        throw new Error(`HTTP error: ${response.status}`);
-                    }
-                    
-                    const text = await response.text();
-                    
-                    // Analizar la respuesta de base-adyen.php
-                    if (text.includes('APROVADA') || text.includes('Aprovada') || text.includes('Authorised') || 
-                        text.includes('APPROVED') || text.includes('SUCCESS') || text.includes('AUTHORISED')) {
-                        
-                        approved.push({
-                            card: card,
-                            result: 'APROVADA - SHANGRI-LA EXPRESS'
-                        });
-                        
-                        updateApprovedTable();
-                        updateCounters();
-                        
-                    } else if (text.includes('REPROVADA') || text.includes('Reprovada') || text.includes('Refused') || 
-                               text.includes('REJECTED') || text.includes('DECLINED') || text.includes('FAILED')) {
-                        
-                        rejected.push({
-                            card: card,
-                            reason: 'REPROVADA - SHANGRI-LA EXPRESS'
-                        });
-                        
-                        updateRejectedTable();
-                        updateCounters();
-                        
-                    } else if (text.includes('3D') || text.includes('3DS') || text.includes('3D Secure')) {
-                        
-                        rejected.push({
-                            card: card,
-                            reason: '3D SECURE REQUERIDO'
-                        });
-                        
-                        updateRejectedTable();
-                        updateCounters();
-                        
-                    } else {
-                        handleError(card, "Respuesta no reconocida de la API");
-                    }
-                    
-                } catch (error) {
-                    handleError(card, `Error de conexión: ${error.message}`);
+        // ========== FUNCIONES PRINCIPALES DEL CHECKER ==========
+        function startChecking() {
+            if (isChecking && !isPaused) return;
+            
+            if (!isPaused) {
+                const list = cardList.value.trim();
+                if (list === '') {
+                    showToast('error', 'Por favor, ingrese una lista de tarjetas.');
+                    return;
                 }
                 
-                currentIndex++;
-                updateProgressBar((currentIndex / cards.length) * 100);
-                setTimeout(checkNext, delay);
-            }
-
-            function pauseChecking() {
-                if (!isChecking || isPaused) return;
-                
-                isPaused = true;
-                pauseBtn.disabled = true;
-                startBtn.disabled = false;
-                startBtn.innerHTML = '<i class="fas fa-play"></i><span>Continuar</span>';
-                
-                if (currentRequest) {
-                    currentRequest.abort && currentRequest.abort();
-                    currentRequest = null;
+                cards = list.split('\n').filter(line => line.trim() !== '');
+                if (cards.length === 0) {
+                    showToast('error', 'No se encontraron tarjetas válidas.');
+                    return;
                 }
                 
-                showToast('info', 'Verificación pausada.');
-            }
-
-            function stopChecking() {
-                if (!isChecking) return;
-                
-                isChecking = false;
-                isPaused = false;
-                
-                startBtn.disabled = false;
-                pauseBtn.disabled = true;
-                stopBtn.disabled = true;
-                startBtn.innerHTML = '<i class="fas fa-play"></i><span>Iniciar Verificación</span>';
-                
-                if (currentRequest) {
-                    currentRequest.abort && currentRequest.abort();
-                    currentRequest = null;
+                if (userCredits < cards.length) {
+                    Swal.fire({
+                        title: 'Créditos Insuficientes',
+                        text: `Necesitas ${cards.length} créditos pero solo tienes ${userCredits}.`,
+                        icon: 'warning',
+                        confirmButtonText: 'Entendido',
+                        background: '#1a202c',
+                        color: '#ffffff'
+                    });
+                    return;
                 }
                 
                 currentIndex = 0;
                 updateProgressBar(0);
-                
-                showToast('info', 'Verificación detenida.');
             }
+            
+            isChecking = true;
+            isPaused = false;
+            
+            startBtn.disabled = true;
+            pauseBtn.disabled = false;
+            stopBtn.disabled = false;
+            
+            showToast('success', '¡Verificación iniciada!');
+            
+            checkNext();
+        }
 
-            // ========== FUNCIONES AUXILIARES ==========
-            function isValidCardFormat(card) {
-                const parts = card.split('|');
-                return parts.length === 3 || parts.length === 4;
+        async function checkNext() {
+            if (!isChecking || isPaused) return;
+            
+            if (currentIndex >= cards.length) {
+                stopChecking();
+                showToast('success', '¡Verificación completada!');
+                return;
             }
+            
+            const card = cards[currentIndex].trim();
+            if (card === '') {
+                currentIndex++;
+                setTimeout(checkNext, delay);
+                return;
+            }
+            
+            if (userCredits <= 0) {
+                showToast('error', 'Sin créditos disponibles');
+                stopChecking();
+                return;
+            }
+            
+            await processCard(card);
+        }
 
-            function handleError(card, errorMessage) {
-                errors.push({
-                    card: card,
-                    error: errorMessage
+        async function processCard(card) {
+            try {
+                const formData = new FormData();
+                formData.append('consume', '1');
+
+                const creditResponse = await fetch('auth.php?action=consume_credit', {
+                    method: 'POST',
+                    body: formData
                 });
-                
-                updateErrorsTable();
-                updateCounters();
-            }
 
-            function updateApprovedTable() {
-                if (approved.length === 0) {
-                    approvedTable.innerHTML = '<tr><td colspan="3" class="empty-message">No hay tarjetas aprobadas aún</td></tr>';
-                    return;
-                }
-                
-                let html = '';
-                approved.forEach((item, index) => {
-                    html += `
-                        <tr>
-                            <td>${escapeHtml(item.card)}</td>
-                            <td>${escapeHtml(item.result)}</td>
-                            <td class="action-buttons">
-                                <button class="action-btn copy-btn" onclick="copyToClipboard('${escapeSingleQuotes(item.card)} | ${escapeSingleQuotes(item.result)}')" title="Copiar">
-                                    <i class="fas fa-copy"></i>
-                                </button>
-                                <button class="action-btn delete-btn" onclick="deleteApprovedItem(${index})" title="Eliminar">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                });
-                
-                approvedTable.innerHTML = html;
-            }
+                const creditData = await creditResponse.json();
 
-            function updateRejectedTable() {
-                if (rejected.length === 0) {
-                    rejectedTable.innerHTML = '<tr><td colspan="3" class="empty-message">No hay tarjetas rechazadas aún</td></tr>';
-                    return;
-                }
-                
-                let html = '';
-                rejected.forEach((item, index) => {
-                    html += `
-                        <tr>
-                            <td>${escapeHtml(item.card)}</td>
-                            <td>${escapeHtml(item.reason)}</td>
-                            <td class="action-buttons">
-                                <button class="action-btn delete-btn" onclick="deleteRejectedItem(${index})" title="Eliminar">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                });
-                
-                rejectedTable.innerHTML = html;
-            }
-
-            function updateErrorsTable() {
-                if (errors.length === 0) {
-                    errorsTable.innerHTML = '<tr><td colspan="3" class="empty-message">No hay errores registrados aún</td></tr>';
-                    return;
-                }
-                
-                let html = '';
-                errors.forEach((item, index) => {
-                    html += `
-                        <tr>
-                            <td>${escapeHtml(item.card)}</td>
-                            <td>${escapeHtml(item.error)}</td>
-                            <td class="action-buttons">
-                                <button class="action-btn delete-btn" onclick="deleteErrorItem(${index})" title="Eliminar">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                });
-                
-                errorsTable.innerHTML = html;
-            }
-
-            function updateCounters() {
-                approvedCount.textContent = approved.length;
-                rejectedCount.textContent = rejected.length;
-                errorCount.textContent = errors.length;
-                
-                approvedBadge.textContent = approved.length;
-                rejectedBadge.textContent = rejected.length;
-                errorsBadge.textContent = errors.length;
-            }
-
-            function updateProgressBar(percentage) {
-                progressBar.style.width = `${percentage}%`;
-                progressPercentage.textContent = `${Math.round(percentage)}%`;
-            }
-
-            // ========== FUNCIONES DE GESTIÓN DE RESULTADOS ==========
-            function copyAllApprovedResults() {
-                if (approved.length === 0) {
-                    showToast('warning', 'No hay tarjetas aprobadas para copiar.');
-                    return;
-                }
-                
-                const approvedText = approved.map(item => `${item.card} | ${item.result}`).join('\n');
-                copyToClipboard(approvedText);
-                showToast('success', '¡Tarjetas aprobadas copiadas al portapapeles!');
-            }
-
-            function copyToClipboard(text) {
-                navigator.clipboard.writeText(text).then(() => {
-                    showToast('success', 'Copiado al portapapeles');
-                }).catch(err => {
-                    console.error('Error al copiar:', err);
-                    showToast('error', 'Error al copiar al portapapeles');
-                });
-            }
-
-            function clearResults(type) {
-                if (type === 'approved') {
-                    if (approved.length === 0) {
-                        showToast('warning', 'No hay tarjetas aprobadas para limpiar.');
+                if (creditData.success) {
+                    userCredits = creditData.new_balance;
+                    creditsCount.textContent = userCredits;
+                    updateCreditsColor();
+                    
+                    if (!isValidCardFormat(card)) {
+                        handleError(card, "Formato inválido. Use: Número|Mes|Año|CVV o Número|Año|CVV");
+                        currentIndex++;
+                        updateProgressBar((currentIndex / cards.length) * 100);
+                        setTimeout(checkNext, delay);
                         return;
                     }
-                    approved = [];
+                    
+                    await checkCard(card);
+                    
+                } else {
+                    showToast('error', 'Error al consumir crédito');
+                    stopChecking();
+                }
+            } catch (error) {
+                console.error('Error procesando tarjeta:', error);
+                handleError(card, "Error de procesamiento");
+                currentIndex++;
+                updateProgressBar((currentIndex / cards.length) * 100);
+                setTimeout(checkNext, delay);
+            }
+        }
+
+        async function checkCard(card) {
+            try {
+                // Usar base-adyen.php con parámetro GET
+                const url = `base-adyen.php?lista=${encodeURIComponent(card)}`;
+                
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (!data || typeof data !== 'object') {
+                    throw new Error('Respuesta inválida de la API');
+                }
+                
+                // Procesar según el status devuelto por tu API
+                processAPIResponse(card, data);
+                
+            } catch (error) {
+                console.error('Error en checkCard:', error);
+                handleError(card, `Error de API: ${error.message}`);
+            }
+            
+            currentIndex++;
+            updateProgressBar((currentIndex / cards.length) * 100);
+            setTimeout(checkNext, delay);
+        }
+
+        function processAPIResponse(card, response) {
+            console.log('Respuesta de API:', response);
+            
+            // Extraer información básica de la tarjeta para mostrar
+            const cardMasked = getCardMasked(card);
+            
+            switch(response.status) {
+                case 'approved':
+                case 'success':
+                    approved.push({
+                        card: card,
+                        result: response.message || '✅ APROVADA - SHANGRI-LA',
+                        fullResponse: response
+                    });
                     updateApprovedTable();
-                } else if (type === 'rejected') {
-                    if (rejected.length === 0) {
-                        showToast('warning', 'No hay tarjetas rechazadas para limpiar.');
-                        return;
-                    }
-                    rejected = [];
+                    break;
+                    
+                case 'rejected':
+                case 'declined':
+                    rejected.push({
+                        card: card,
+                        reason: response.message || '❌ REPROVADA - SHANGRI-LA',
+                        fullResponse: response
+                    });
                     updateRejectedTable();
-                } else if (type === 'errors') {
-                    if (errors.length === 0) {
-                        showToast('warning', 'No hay errores para limpiar.');
-                        return;
-                    }
-                    errors = [];
+                    break;
+                    
+                case 'error':
+                    errors.push({
+                        card: card,
+                        error: response.message || '⚠️ ERROR',
+                        fullResponse: response
+                    });
                     updateErrorsTable();
-                }
-                
-                updateCounters();
-                showToast('success', 'Lista limpiada con éxito');
-            }
-
-            function clearAll() {
-                Swal.fire({
-                    title: '¿Limpiar todo?',
-                    text: 'Esta acción borrará todas las tarjetas y resultados.',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Sí, limpiar todo',
-                    cancelButtonText: 'Cancelar',
-                    confirmButtonColor: '#e53e3e',
-                    cancelButtonColor: '#718096',
-                    background: '#1a202c',
-                    color: '#ffffff'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        cardList.value = '';
-                        approved = [];
-                        rejected = [];
-                        errors = [];
-                        currentIndex = 0;
-                        isChecking = false;
-                        isPaused = false;
-                        
+                    break;
+                    
+                case '3d_secure':
+                    rejected.push({
+                        card: card,
+                        reason: '3D SECURE REQUERIDO',
+                        fullResponse: response
+                    });
+                    updateRejectedTable();
+                    break;
+                    
+                case 'unknown':
+                    errors.push({
+                        card: card,
+                        error: response.message || 'Respuesta desconocida',
+                        fullResponse: response
+                    });
+                    updateErrorsTable();
+                    break;
+                    
+                default:
+                    // Intentar detectar si es aprobada por el contenido del HTML
+                    if (response.html && response.html.includes('APROVADA')) {
+                        approved.push({
+                            card: card,
+                            result: '✅ APROVADA (detectada en HTML)',
+                            fullResponse: response
+                        });
                         updateApprovedTable();
+                    } else if (response.html && response.html.includes('REPROVADA')) {
+                        rejected.push({
+                            card: card,
+                            reason: '❌ REPROVADA (detectada en HTML)',
+                            fullResponse: response
+                        });
                         updateRejectedTable();
+                    } else {
+                        errors.push({
+                            card: card,
+                            error: 'Estado no reconocido: ' + (response.status || 'N/A'),
+                            fullResponse: response
+                        });
                         updateErrorsTable();
-                        updateCounters();
-                        updateProgressBar(0);
-                        
-                        startBtn.disabled = !hasActiveSession;
-                        pauseBtn.disabled = true;
-                        stopBtn.disabled = true;
-                        
-                        if (!hasActiveSession) {
-                            startBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i><span>Inicia Sesión</span>';
-                        } else {
-                            startBtn.innerHTML = '<i class="fas fa-play"></i><span>Iniciar Verificación</span>';
-                        }
-                        
-                        showToast('success', 'Todos los datos han sido limpiados');
                     }
-                });
             }
+            
+            updateCounters();
+        }
 
-            // ========== FUNCIONES DE ESCAPE PARA SEGURIDAD ==========
-            function escapeHtml(text) {
-                const div = document.createElement('div');
-                div.textContent = text;
-                return div.innerHTML;
+        function getCardMasked(card) {
+            try {
+                const parts = card.split('|');
+                const ccNumber = parts[0].replace(/\s/g, '');
+                if (ccNumber.length >= 10) {
+                    return ccNumber.substring(0, 6) + '******' + ccNumber.substring(ccNumber.length - 4);
+                }
+                return ccNumber;
+            } catch (e) {
+                return card;
             }
+        }
 
-            function escapeSingleQuotes(text) {
-                return text.replace(/'/g, "\\'").replace(/"/g, '\\"');
+        function pauseChecking() {
+            if (!isChecking || isPaused) return;
+            
+            isPaused = true;
+            pauseBtn.disabled = true;
+            startBtn.disabled = false;
+            startBtn.innerHTML = '<i class="fas fa-play"></i><span>Continuar</span>';
+            
+            if (currentRequest) {
+                currentRequest.abort && currentRequest.abort();
+                currentRequest = null;
             }
+            
+            showToast('info', 'Verificación pausada.');
+        }
 
-            // ========== FUNCIONES GLOBALES PARA LOS BOTONES DE TABLA ==========
-            window.copyToClipboard = function(text) {
-                navigator.clipboard.writeText(text).then(() => {
-                    showToast('success', 'Copiado al portapapeles');
-                }).catch(err => {
-                    console.error('Error al copiar:', err);
-                    showToast('error', 'Error al copiar');
-                });
-            };
+        function stopChecking() {
+            if (!isChecking) return;
+            
+            isChecking = false;
+            isPaused = false;
+            
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+            stopBtn.disabled = true;
+            startBtn.innerHTML = '<i class="fas fa-play"></i><span>Iniciar Verificación</span>';
+            
+            if (currentRequest) {
+                currentRequest.abort && currentRequest.abort();
+                currentRequest = null;
+            }
+            
+            currentIndex = 0;
+            updateProgressBar(0);
+            
+            showToast('info', 'Verificación detenida.');
+        }
 
-            window.deleteApprovedItem = function(index) {
-                approved.splice(index, 1);
+        // ========== FUNCIONES AUXILIARES ==========
+        function isValidCardFormat(card) {
+            const parts = card.split('|');
+            return parts.length === 3 || parts.length === 4;
+        }
+
+        function handleError(card, errorMessage) {
+            errors.push({
+                card: card,
+                error: errorMessage
+            });
+            
+            updateErrorsTable();
+            updateCounters();
+        }
+
+        function updateApprovedTable() {
+            if (approved.length === 0) {
+                approvedTable.innerHTML = '<tr><td colspan="3" class="empty-message">No hay tarjetas aprobadas aún</td></tr>';
+                return;
+            }
+            
+            let html = '';
+            approved.forEach((item, index) => {
+                html += `
+                    <tr>
+                        <td>${escapeHtml(item.card)}</td>
+                        <td>${escapeHtml(item.result)}</td>
+                        <td class="action-buttons">
+                            <button class="action-btn copy-btn" onclick="copyToClipboard('${escapeSingleQuotes(item.card)} | ${escapeSingleQuotes(item.result)}')" title="Copiar">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <button class="action-btn delete-btn" onclick="deleteApprovedItem(${index})" title="Eliminar">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            approvedTable.innerHTML = html;
+        }
+
+        function updateRejectedTable() {
+            if (rejected.length === 0) {
+                rejectedTable.innerHTML = '<tr><td colspan="3" class="empty-message">No hay tarjetas rechazadas aún</td></tr>';
+                return;
+            }
+            
+            let html = '';
+            rejected.forEach((item, index) => {
+                html += `
+                    <tr>
+                        <td>${escapeHtml(item.card)}</td>
+                        <td>${escapeHtml(item.reason)}</td>
+                        <td class="action-buttons">
+                            <button class="action-btn delete-btn" onclick="deleteRejectedItem(${index})" title="Eliminar">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            rejectedTable.innerHTML = html;
+        }
+
+        function updateErrorsTable() {
+            if (errors.length === 0) {
+                errorsTable.innerHTML = '<tr><td colspan="3" class="empty-message">No hay errores registrados aún</td></tr>';
+                return;
+            }
+            
+            let html = '';
+            errors.forEach((item, index) => {
+                html += `
+                    <tr>
+                        <td>${escapeHtml(item.card)}</td>
+                        <td>${escapeHtml(item.error)}</td>
+                        <td class="action-buttons">
+                            <button class="action-btn delete-btn" onclick="deleteErrorItem(${index})" title="Eliminar">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            errorsTable.innerHTML = html;
+        }
+
+        function updateCounters() {
+            approvedCount.textContent = approved.length;
+            rejectedCount.textContent = rejected.length;
+            errorCount.textContent = errors.length;
+            
+            approvedBadge.textContent = approved.length;
+            rejectedBadge.textContent = rejected.length;
+            errorsBadge.textContent = errors.length;
+        }
+
+        function updateProgressBar(percentage) {
+            progressBar.style.width = `${percentage}%`;
+            progressPercentage.textContent = `${Math.round(percentage)}%`;
+        }
+
+        // ========== FUNCIONES DE GESTIÓN DE RESULTADOS ==========
+        function copyAllApprovedResults() {
+            if (approved.length === 0) {
+                showToast('warning', 'No hay tarjetas aprobadas para copiar.');
+                return;
+            }
+            
+            const approvedText = approved.map(item => `${item.card} | ${item.result}`).join('\n');
+            copyToClipboard(approvedText);
+            showToast('success', '¡Tarjetas aprobadas copiadas al portapapeles!');
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('success', 'Copiado al portapapeles');
+            }).catch(err => {
+                console.error('Error al copiar:', err);
+                showToast('error', 'Error al copiar al portapapeles');
+            });
+        }
+
+        function clearResults(type) {
+            if (type === 'approved') {
+                if (approved.length === 0) {
+                    showToast('warning', 'No hay tarjetas aprobadas para limpiar.');
+                    return;
+                }
+                approved = [];
                 updateApprovedTable();
-                updateCounters();
-                showToast('success', 'Tarjeta eliminada');
-            };
-
-            window.deleteRejectedItem = function(index) {
-                rejected.splice(index, 1);
+            } else if (type === 'rejected') {
+                if (rejected.length === 0) {
+                    showToast('warning', 'No hay tarjetas rechazadas para limpiar.');
+                    return;
+                }
+                rejected = [];
                 updateRejectedTable();
-                updateCounters();
-                showToast('success', 'Tarjeta eliminada');
-            };
-
-            window.deleteErrorItem = function(index) {
-                errors.splice(index, 1);
+            } else if (type === 'errors') {
+                if (errors.length === 0) {
+                    showToast('warning', 'No hay errores para limpiar.');
+                    return;
+                }
+                errors = [];
                 updateErrorsTable();
-                updateCounters();
-                showToast('success', 'Error eliminado');
-            };
-
-            // ========== FUNCIÓN DE NOTIFICACIÓN ==========
-            function showToast(icon, message) {
-                const Toast = Swal.mixin({
-                    toast: true,
-                    position: 'top-end',
-                    showConfirmButton: false,
-                    timer: 3000,
-                    timerProgressBar: true,
-                    didOpen: (toast) => {
-                        toast.addEventListener('mouseenter', Swal.stopTimer);
-                        toast.addEventListener('mouseleave', Swal.resumeTimer);
-                    },
-                    background: '#1a202c',
-                    color: '#ffffff'
-                });
-                
-                Toast.fire({
-                    icon: icon,
-                    title: message
-                });
             }
-        });
-    </script>
+            
+            updateCounters();
+            showToast('success', 'Lista limpiada con éxito');
+        }
+
+        function clearAll() {
+            Swal.fire({
+                title: '¿Limpiar todo?',
+                text: 'Esta acción borrará todas las tarjetas y resultados.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, limpiar todo',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#e53e3e',
+                cancelButtonColor: '#718096',
+                background: '#1a202c',
+                color: '#ffffff'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    cardList.value = '';
+                    approved = [];
+                    rejected = [];
+                    errors = [];
+                    currentIndex = 0;
+                    isChecking = false;
+                    isPaused = false;
+                    
+                    updateApprovedTable();
+                    updateRejectedTable();
+                    updateErrorsTable();
+                    updateCounters();
+                    updateProgressBar(0);
+                    
+                    startBtn.disabled = !hasActiveSession;
+                    pauseBtn.disabled = true;
+                    stopBtn.disabled = true;
+                    
+                    if (!hasActiveSession) {
+                        startBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i><span>Inicia Sesión</span>';
+                    } else {
+                        startBtn.innerHTML = '<i class="fas fa-play"></i><span>Iniciar Verificación</span>';
+                    }
+                    
+                    showToast('success', 'Todos los datos han sido limpiados');
+                }
+            });
+        }
+
+        // ========== FUNCIONES DE ESCAPE PARA SEGURIDAD ==========
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function escapeSingleQuotes(text) {
+            return text.replace(/'/g, "\\'").replace(/"/g, '\\"');
+        }
+
+        // ========== FUNCIONES GLOBALES PARA LOS BOTONES DE TABLA ==========
+        window.copyToClipboard = function(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('success', 'Copiado al portapapeles');
+            }).catch(err => {
+                console.error('Error al copiar:', err);
+                showToast('error', 'Error al copiar');
+            });
+        };
+
+        window.deleteApprovedItem = function(index) {
+            approved.splice(index, 1);
+            updateApprovedTable();
+            updateCounters();
+            showToast('success', 'Tarjeta eliminada');
+        };
+
+        window.deleteRejectedItem = function(index) {
+            rejected.splice(index, 1);
+            updateRejectedTable();
+            updateCounters();
+            showToast('success', 'Tarjeta eliminada');
+        };
+
+        window.deleteErrorItem = function(index) {
+            errors.splice(index, 1);
+            updateErrorsTable();
+            updateCounters();
+            showToast('success', 'Error eliminado');
+        };
+
+        // ========== FUNCIÓN DE NOTIFICACIÓN ==========
+        function showToast(icon, message) {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer);
+                    toast.addEventListener('mouseleave', Swal.resumeTimer);
+                },
+                background: '#1a202c',
+                color: '#ffffff'
+            });
+            
+            Toast.fire({
+                icon: icon,
+                title: message
+            });
+        }
+    });
+</script>
 </body>
 </html>
