@@ -3,7 +3,7 @@ class Database {
     private $host = "database-2.chss6me4w28s.mx-central-1.rds.amazonaws.com";
     private $dbname = "goku_checker";
     private $username = "admin";  // ← TU USUARIO REAL AQUÍ
-    private $password = "Kraker13";
+    private $password = "kraker13";
     public $conn;
 
     public function getConnection() {
