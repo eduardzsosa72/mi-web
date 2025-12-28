@@ -10,40 +10,32 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css">
     <style>
+        /* Mantener todo el CSS igual que antes */
         :root {
             --primary: #10b981;
             --primary-dark: #059669;
             --primary-light: #34d399;
             --primary-lighter: #d1fae5;
-
             --secondary: #34d399;
-
             --success: #10b981;
             --success-dark: #059669;
             --success-light: #34d399;
-
             --warning: #f59e0b;
             --warning-dark: #d97706;
             --warning-light: #fde68a;
-
             --error: #ef4444;
             --error-dark: #b91c1c;
             --error-light: #fecaca;
-
             --info: #10b981;
             --info-dark: #059669;
             --info-light: #34d399;
-
             --dark: #020617;
             --darker: #000814;
             --light: #e5e7eb;
-
             --gray: #9ca3af;
             --gray-light: #1f2937;
-
             --card-bg: rgba(2, 6, 23, 0.95);
             --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
-
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -84,14 +76,12 @@
             padding: 20px;
         }
 
-        /* Container */
         .app-container {
             max-width: 1400px;
             margin: 0 auto;
             padding: 0 15px;
         }
 
-        /* Header */
         .app-header {
             background: rgba(2, 6, 23, 0.95);
             backdrop-filter: blur(20px);
@@ -289,7 +279,6 @@
             transform: translateY(-2px);
         }
 
-        /* Stats Section */
         .stats-section {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -361,7 +350,6 @@
             margin-top: 5px;
         }
 
-        /* Progress Section */
         .progress-section {
             background: var(--card-bg);
             border: 2px solid var(--primary);
@@ -421,7 +409,6 @@
             background-size: 200% 100%;
         }
 
-        /* Control Buttons */
         .control-buttons {
             display: flex;
             gap: 15px;
@@ -485,7 +472,6 @@
             box-shadow: 0 8px 25px rgba(239, 68, 68, 0.6);
         }
 
-        /* Main Content */
         .main-content {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
@@ -557,8 +543,7 @@
         }
 
         textarea,
-        input,
-        select {
+        input {
             width: 100%;
             padding: 15px;
             background: rgba(0, 0, 0, 0.4);
@@ -570,8 +555,7 @@
         }
 
         textarea:focus,
-        input:focus,
-        select:focus {
+        input:focus {
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
             background: rgba(0, 0, 0, 0.55);
@@ -589,7 +573,6 @@
             color: rgba(156, 163, 175, 0.7);
         }
 
-        /* Tabs */
         .tabs-container {
             background: var(--card-bg);
             border: 2px solid var(--primary);
@@ -664,7 +647,6 @@
             animation: fadeIn 0.5s ease;
         }
 
-        /* Tables */
         .table-container {
             overflow-x: auto;
             border-radius: 12px;
@@ -743,7 +725,6 @@
             box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
         }
 
-        /* Footer */
         .app-footer {
             text-align: center;
             padding: 20px;
@@ -788,7 +769,6 @@
             margin: 0 5px;
         }
 
-        /* Scrollbar */
         ::-webkit-scrollbar {
             width: 10px;
             height: 10px;
@@ -808,7 +788,6 @@
             background: linear-gradient(180deg, var(--primary-light), var(--primary));
         }
 
-        /* Responsive */
         @media (max-width: 1024px) {
             .main-content {
                 grid-template-columns: 1fr;
@@ -1035,21 +1014,21 @@
             <div class="card">
                 <div class="card-header">
                     <div class="card-icon">
-                        <i class="fas fa-cogs"></i>
+                        <i class="fas fa-server"></i>
                     </div>
-                    <h3 class="card-title">Configuración Adyen</h3>
+                    <h3 class="card-title">Configuración API</h3>
                 </div>
                 <div class="card-body">
                     <div class="form-group">
-                        <label for="gatewaySelect" class="form-label">API Endpoint</label>
-                        <select id="gatewaySelect">
-                            <option value="adyen">base-adyen.php</option>
-                            <option value="adyen_test">Test Endpoint</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
                         <label for="delayInput" class="form-label">Delay entre consultas (ms)</label>
                         <input type="number" id="delayInput" value="500" min="100" max="5000" step="100">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">API Endpoint</label>
+                        <div style="background: rgba(16, 185, 129, 0.1); padding: 12px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.3);">
+                            <i class="fas fa-link" style="color: var(--primary); margin-right: 8px;"></i>
+                            <span style="font-family: monospace;">base-adyen.php</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1191,7 +1170,6 @@
             const clearErrors = document.getElementById('clearErrors');
             
             const cardList = document.getElementById('cardList');
-            const gatewaySelect = document.getElementById('gatewaySelect');
             const delayInput = document.getElementById('delayInput');
             
             const approvedCount = document.getElementById('approvedCount');
@@ -1427,244 +1405,37 @@
             }
 
             // ========== FUNCIONES PRINCIPALES DEL CHECKER ==========
-          
-                // ========== FUNCIONES PRINCIPALES DEL CHECKER ==========
-function startChecking() {
-    if (isChecking && !isPaused) return;
-    
-    if (!isPaused) {
-        const list = cardList.value.trim();
-        if (list === '') {
-            showToast('error', 'Por favor, ingrese una lista de tarjetas.');
-            return;
-        }
-        
-        cards = list.split('\n').filter(line => line.trim() !== '');
-        if (cards.length === 0) {
-            showToast('error', 'No se encontraron tarjetas válidas.');
-            return;
-        }
-        
-        if (userCredits < cards.length) {
-            Swal.fire({
-                title: 'Créditos Insuficientes',
-                text: `Necesitas ${cards.length} créditos pero solo tienes ${userCredits}.`,
-                icon: 'warning',
-                confirmButtonText: 'Entendido',
-                background: '#1a202c',
-                color: '#ffffff'
-            });
-            return;
-        }
-        
-        currentIndex = 0;
-        updateProgressBar(0);
-    }
-    
-    isChecking = true;
-    isPaused = false;
-    
-    startBtn.disabled = true;
-    pauseBtn.disabled = false;
-    stopBtn.disabled = false;
-    
-    showToast('success', '¡Verificación iniciada!');
-    
-    checkNext();
-}
-
-async function checkNext() {
-    if (!isChecking || isPaused) return;
-    
-    if (currentIndex >= cards.length) {
-        stopChecking();
-        showToast('success', '¡Verificación completada!');
-        return;
-    }
-    
-    const card = cards[currentIndex].trim();
-    if (card === '') {
-        currentIndex++;
-        setTimeout(checkNext, delay);
-        return;
-    }
-    
-    if (userCredits <= 0) {
-        showToast('error', 'Sin créditos disponibles');
-        stopChecking();
-        return;
-    }
-    
-    await processCard(card);
-}
-
-async function processCard(card) {
-    try {
-        const formData = new FormData();
-        formData.append('consume', '1');
-
-        const creditResponse = await fetch('auth.php?action=consume_credit', {
-            method: 'POST',
-            body: formData
-        });
-
-        const creditData = await creditResponse.json();
-
-        if (creditData.success) {
-            userCredits = creditData.new_balance;
-            creditsCount.textContent = userCredits;
-            updateCreditsColor();
-            
-            if (!isValidCardFormat(card)) {
-                handleError(card, "Formato inválido. Use: Número|Mes|Año|CVV o Número|Año|CVV");
-                currentIndex++;
-                updateProgressBar((currentIndex / cards.length) * 100);
-                setTimeout(checkNext, delay);
-                return;
-            }
-            
-            await checkCard(card);
-            
-        } else {
-            showToast('error', 'Error al consumir crédito');
-            stopChecking();
-        }
-    } catch (error) {
-        console.error('Error procesando tarjeta:', error);
-        handleError(card, "Error de procesamiento");
-        currentIndex++;
-        updateProgressBar((currentIndex / cards.length) * 100);
-        setTimeout(checkNext, delay);
-    }
-}
-
-async function checkCard(card) {
-    const endpoint = gatewaySelect.value === 'adyen_test' ? 'test-adyen.php' : 'base-adyen.php';
-    
-    // ENVIAR COMO PARÁMETRO GET, NO POST
-    try {
-        const url = `${endpoint}?lista=${encodeURIComponent(card)}`;
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error: ${response.status}`);
-        }
-        
-        // Intentar parsear como JSON
-        const data = await response.json();
-        
-        // Procesar respuesta de tu API
-        processAdyenResponse(card, data);
-        
-    } catch (error) {
-        // Si falla el JSON, puede que la API esté devolviendo HTML
-        console.error('Error en checkCard:', error);
-        
-        // Intentar obtener el texto de la respuesta
-        try {
-            const url = `${endpoint}?lista=${encodeURIComponent(card)}`;
-            const textResponse = await fetch(url);
-            const text = await textResponse.text();
-            
-            // Verificar si hay "APROVADA" o "REPROVADA" en el HTML
-            if (text.includes('APROVADA') || text.includes('Aprovada') || text.includes('Authorised')) {
-                approved.push({
-                    card: card,
-                    result: 'Aprobada - SHANGRI-LA'
-                });
-                updateApprovedTable();
-            } else if (text.includes('REPROVADA') || text.includes('Reprovada') || text.includes('Refused')) {
-                rejected.push({
-                    card: card,
-                    reason: 'Rechazada - SHANGRI-LA'
-                });
-                updateRejectedTable();
-            } else {
-                handleError(card, `Error: ${error.message}`);
-            }
-        } catch (secondError) {
-            handleError(card, `Error de conexión: ${error.message}`);
-        }
-    }
-    
-    currentIndex++;
-    updateProgressBar((currentIndex / cards.length) * 100);
-    setTimeout(checkNext, delay);
-}
-
-function processAdyenResponse(card, response) {
-    console.log('Respuesta de API:', response);
-    
-    // Tu API devuelve: {status, message, html, data}
-    if (response.status === 'approved') {
-        approved.push({
-            card: card,
-            result: response.message || 'Aprobada - SHANGRI-LA EXPRESS'
-        });
-        
-        updateApprovedTable();
-        
-    } else if (response.status === 'rejected') {
-        rejected.push({
-            card: card,
-            reason: response.message || 'Rechazada - SHANGRI-LA EXPRESS'
-        });
-        
-        updateRejectedTable();
-        
-    } else if (response.status === 'error') {
-        errors.push({
-            card: card,
-            error: response.message || 'Error en la API'
-        });
-        
-        updateErrorsTable();
-        
-    } else if (response.status === '3d_secure') {
-        // Manejar 3D Secure
-        rejected.push({
-            card: card,
-            reason: '3D Secure requerido - ' + (response.message || '')
-        });
-        
-        updateRejectedTable();
-        
-    } else {
-        // Respuesta no reconocida, revisar estructura
-        console.warn('Respuesta no reconocida:', response);
-        
-        // Intentar extraer información de html si existe
-        if (response.html) {
-            if (response.html.includes('APROVADA') || response.html.includes('✅ APROVADA')) {
-                approved.push({
-                    card: card,
-                    result: 'Aprobada (detectada en HTML)'
-                });
-                updateApprovedTable();
-            } else if (response.html.includes('REPROVADA') || response.html.includes('❌ REPROVADA')) {
-                rejected.push({
-                    card: card,
-                    reason: 'Rechazada (detectada en HTML)'
-                });
-                updateRejectedTable();
-            } else {
-                errors.push({
-                    card: card,
-                    error: 'Respuesta no reconocida: ' + (response.message || 'Sin mensaje')
-                });
-                updateErrorsTable();
-            }
-        } else {
-            errors.push({
-                card: card,
-                error: 'Respuesta no reconocida: ' + JSON.stringify(response).substring(0, 100)
-            });
-            updateErrorsTable();
-        }
-    }
-    
-  
-
+            function startChecking() {
+                if (isChecking && !isPaused) return;
+                
+                if (!isPaused) {
+                    const list = cardList.value.trim();
+                    if (list === '') {
+                        showToast('error', 'Por favor, ingrese una lista de tarjetas.');
+                        return;
+                    }
+                    
+                    cards = list.split('\n').filter(line => line.trim() !== '');
+                    if (cards.length === 0) {
+                        showToast('error', 'No se encontraron tarjetas válidas.');
+                        return;
+                    }
+                    
+                    if (userCredits < cards.length) {
+                        Swal.fire({
+                            title: 'Créditos Insuficientes',
+                            text: `Necesitas ${cards.length} créditos pero solo tienes ${userCredits}.`,
+                            icon: 'warning',
+                            confirmButtonText: 'Entendido',
+                            background: '#1a202c',
+                            color: '#ffffff'
+                        });
+                        return;
+                    }
+                    
+                    currentIndex = 0;
+                    updateProgressBar(0);
+                }
                 
                 isChecking = true;
                 isPaused = false;
@@ -1744,42 +1515,53 @@ function processAdyenResponse(card, response) {
             }
 
             async function checkCard(card) {
-                const endpoint = gatewaySelect.value === 'adyen_test' ? 'test-adyen.php' : 'base-adyen.php';
-                
-                const parsedCard = parseCardData(card);
-                if (!parsedCard) {
-                    handleError(card, "Formato de tarjeta no válido");
-                    currentIndex++;
-                    updateProgressBar((currentIndex / cards.length) * 100);
-                    setTimeout(checkNext, delay);
-                    return;
-                }
-                
-                const requestData = {
-                    cards: [parsedCard],
-                    action: 'validate_cards',
-                    timestamp: new Date().toISOString()
-                };
-                
                 try {
-                    currentRequest = await fetch(endpoint, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        body: JSON.stringify(requestData)
-                    });
+                    const url = `base-adyen.php?lista=${encodeURIComponent(card)}`;
                     
-                    const response = await currentRequest.json();
+                    const response = await fetch(url);
                     
-                    if (response.success) {
-                        processAdyenResponse(card, response);
-                    } else {
-                        handleError(card, response.error || "Error en la API Adyen");
+                    if (!response.ok) {
+                        throw new Error(`HTTP error: ${response.status}`);
                     }
                     
-                    currentRequest = null;
+                    const text = await response.text();
+                    
+                    // Analizar la respuesta de base-adyen.php
+                    if (text.includes('APROVADA') || text.includes('Aprovada') || text.includes('Authorised') || 
+                        text.includes('APPROVED') || text.includes('SUCCESS') || text.includes('AUTHORISED')) {
+                        
+                        approved.push({
+                            card: card,
+                            result: 'APROVADA - SHANGRI-LA EXPRESS'
+                        });
+                        
+                        updateApprovedTable();
+                        updateCounters();
+                        
+                    } else if (text.includes('REPROVADA') || text.includes('Reprovada') || text.includes('Refused') || 
+                               text.includes('REJECTED') || text.includes('DECLINED') || text.includes('FAILED')) {
+                        
+                        rejected.push({
+                            card: card,
+                            reason: 'REPROVADA - SHANGRI-LA EXPRESS'
+                        });
+                        
+                        updateRejectedTable();
+                        updateCounters();
+                        
+                    } else if (text.includes('3D') || text.includes('3DS') || text.includes('3D Secure')) {
+                        
+                        rejected.push({
+                            card: card,
+                            reason: '3D SECURE REQUERIDO'
+                        });
+                        
+                        updateRejectedTable();
+                        updateCounters();
+                        
+                    } else {
+                        handleError(card, "Respuesta no reconocida de la API");
+                    }
                     
                 } catch (error) {
                     handleError(card, `Error de conexión: ${error.message}`);
@@ -1788,83 +1570,6 @@ function processAdyenResponse(card, response) {
                 currentIndex++;
                 updateProgressBar((currentIndex / cards.length) * 100);
                 setTimeout(checkNext, delay);
-            }
-
-            function parseCardData(cardText) {
-                const parts = cardText.split('|').map(part => part.trim());
-                
-                if (parts.length === 3) {
-                    // Formato: Número|Año|CVV
-                    const [number, year, cvv] = parts;
-                    const expiryYear = year.length === 4 ? year : `20${year}`;
-                    
-                    return {
-                        number: number.replace(/\s/g, ''),
-                        expiryMonth: "01",
-                        expiryYear: expiryYear,
-                        cvv: cvv,
-                        original: cardText
-                    };
-                } else if (parts.length === 4) {
-                    // Formato: Número|Mes|Año|CVV
-                    const [number, month, year, cvv] = parts;
-                    const expiryMonth = month.padStart(2, '0');
-                    const expiryYear = year.length === 4 ? year : `20${year}`;
-                    
-                    return {
-                        number: number.replace(/\s/g, ''),
-                        expiryMonth: expiryMonth,
-                        expiryYear: expiryYear,
-                        cvv: cvv,
-                        original: cardText
-                    };
-                }
-                
-                return null;
-            }
-
-            function processAdyenResponse(card, response) {
-                if (response.results && response.results.length > 0) {
-                    const result = response.results[0];
-                    
-                    if (result.status === 'approved' || result.result === 'Authorised') {
-                        approved.push({
-                            card: card,
-                            result: result.message || "Aprobada por Adyen"
-                        });
-                        
-                        updateApprovedTable();
-                    } else {
-                        rejected.push({
-                            card: card,
-                            reason: result.message || result.reason || "Rechazada por Adyen"
-                        });
-                        
-                        updateRejectedTable();
-                    }
-                } else if (response.cards && response.cards.length > 0) {
-                    const result = response.cards[0];
-                    
-                    if (result.valid === true || result.status === 'approved') {
-                        approved.push({
-                            card: card,
-                            result: result.message || "Validación exitosa"
-                        });
-                        
-                        updateApprovedTable();
-                    } else {
-                        rejected.push({
-                            card: card,
-                            reason: result.message || result.error || "Validación fallida"
-                        });
-                        
-                        updateRejectedTable();
-                    }
-                } else {
-                    handleError(card, "Respuesta de API no reconocida");
-                }
-                
-                updateCounters();
             }
 
             function pauseChecking() {
@@ -1908,9 +1613,7 @@ function processAdyenResponse(card, response) {
             // ========== FUNCIONES AUXILIARES ==========
             function isValidCardFormat(card) {
                 const parts = card.split('|');
-                if (parts.length !== 3 && parts.length !== 4) return false;
-                
-                return true;
+                return parts.length === 3 || parts.length === 4;
             }
 
             function handleError(card, errorMessage) {
@@ -1933,10 +1636,10 @@ function processAdyenResponse(card, response) {
                 approved.forEach((item, index) => {
                     html += `
                         <tr>
-                            <td>${item.card}</td>
-                            <td>${item.result}</td>
+                            <td>${escapeHtml(item.card)}</td>
+                            <td>${escapeHtml(item.result)}</td>
                             <td class="action-buttons">
-                                <button class="action-btn copy-btn" onclick="copyToClipboard('${item.card.replace(/'/g, "\\'")} | ${item.result.replace(/'/g, "\\'")}')" title="Copiar">
+                                <button class="action-btn copy-btn" onclick="copyToClipboard('${escapeSingleQuotes(item.card)} | ${escapeSingleQuotes(item.result)}')" title="Copiar">
                                     <i class="fas fa-copy"></i>
                                 </button>
                                 <button class="action-btn delete-btn" onclick="deleteApprovedItem(${index})" title="Eliminar">
@@ -1960,8 +1663,8 @@ function processAdyenResponse(card, response) {
                 rejected.forEach((item, index) => {
                     html += `
                         <tr>
-                            <td>${item.card}</td>
-                            <td>${item.reason}</td>
+                            <td>${escapeHtml(item.card)}</td>
+                            <td>${escapeHtml(item.reason)}</td>
                             <td class="action-buttons">
                                 <button class="action-btn delete-btn" onclick="deleteRejectedItem(${index})" title="Eliminar">
                                     <i class="fas fa-trash-alt"></i>
@@ -1984,8 +1687,8 @@ function processAdyenResponse(card, response) {
                 errors.forEach((item, index) => {
                     html += `
                         <tr>
-                            <td>${item.card}</td>
-                            <td>${item.error}</td>
+                            <td>${escapeHtml(item.card)}</td>
+                            <td>${escapeHtml(item.error)}</td>
                             <td class="action-buttons">
                                 <button class="action-btn delete-btn" onclick="deleteErrorItem(${index})" title="Eliminar">
                                     <i class="fas fa-trash-alt"></i>
@@ -2026,7 +1729,9 @@ function processAdyenResponse(card, response) {
             }
 
             function copyToClipboard(text) {
-                navigator.clipboard.writeText(text).catch(err => {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('success', 'Copiado al portapapeles');
+                }).catch(err => {
                     console.error('Error al copiar:', err);
                     showToast('error', 'Error al copiar al portapapeles');
                 });
@@ -2101,6 +1806,17 @@ function processAdyenResponse(card, response) {
                         showToast('success', 'Todos los datos han sido limpiados');
                     }
                 });
+            }
+
+            // ========== FUNCIONES DE ESCAPE PARA SEGURIDAD ==========
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            function escapeSingleQuotes(text) {
+                return text.replace(/'/g, "\\'").replace(/"/g, '\\"');
             }
 
             // ========== FUNCIONES GLOBALES PARA LOS BOTONES DE TABLA ==========
