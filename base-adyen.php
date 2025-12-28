@@ -159,9 +159,9 @@ if (!$init_result['success']) {
     exit();
 }
 
-$init_data = json_decode($init_result['response'], true);
+$init_response = json_decode($init_result['response'], true);
 
-if (!$init_data || !isset($init_data['order_number'])) {
+if (!$init_response || !isset($init_response['order_number'])) {
     echo json_encode([
         'status' => 'rejected',
         'message' => 'Error en creación de orden',
@@ -170,9 +170,9 @@ if (!$init_data || !isset($init_data['order_number'])) {
     exit();
 }
 
-$order_number = $init_data['order_number'];
-$order_token = $init_data['order_token'];
-$order_amount = isset($init_data['order_amount']) ? $init_data['order_amount'] : 100;
+$order_number = $init_response['order_number'];
+$order_token = $init_response['order_token'];
+$order_amount = isset($init_response['order_amount']) ? $init_response['order_amount'] : 100;
 
 // Para mes en formato simple (1-12)
 $mes2 = (int)$mes;
@@ -204,9 +204,9 @@ if (!$encrypt_result['success']) {
     exit();
 }
 
-$encrypted_data = json_decode($encrypt_result['response'], true);
+$encrypted_response = json_decode($encrypt_result['response'], true);
 
-if (!$encrypted_data || !isset($encrypted_data['encryptedCardNumber'])) {
+if (!$encrypted_response || !isset($encrypted_response['encryptedCardNumber'])) {
     echo json_encode([
         'status' => 'rejected',
         'message' => 'Error en encriptación',
@@ -215,10 +215,10 @@ if (!$encrypted_data || !isset($encrypted_data['encryptedCardNumber'])) {
     exit();
 }
 
-$encryptedCardNumber = $encrypted_data['encryptedCardNumber'];
-$encryptedExpiryMonth = $encrypted_data['encryptedExpiryMonth'];
-$encryptedExpiryYear = $encrypted_data['encryptedExpiryYear'];
-$encryptedSecurityCode = $encrypted_data['encryptedSecurityCode'];
+$encryptedCardNumber = $encrypted_response['encryptedCardNumber'];
+$encryptedExpiryMonth = $encrypted_response['encryptedExpiryMonth'];
+$encryptedExpiryYear = $encrypted_response['encryptedExpiryYear'];
+$encryptedSecurityCode = $encrypted_response['encryptedSecurityCode'];
 
 // Datos para el pago (nombre aleatorio)
 $nomes = array('Christo','Ryan','Ethan','John','Zoey','Sarah','Pedro','Lucas','Alex','Ana');
@@ -272,11 +272,11 @@ if (!$process_result['success']) {
     exit();
 }
 
-$process_data = json_decode($process_result['response'], true);
+$process_response = json_decode($process_result['response'], true);
 
 // DETERMINAR RESULTADO
-if (isset($process_data['resultCode'])) {
-    switch($process_data['resultCode']) {
+if (isset($process_response['resultCode'])) {
+    switch($process_response['resultCode']) {
         case 'Authorised':
             echo json_encode([
                 'status' => 'approved',
@@ -291,15 +291,15 @@ if (isset($process_data['resultCode'])) {
                     'expiry' => $mes . '/' . substr($ano, -2),
                     'result' => 'Authorised',
                     'order_number' => $order_number,
-                    'auth_code' => isset($process_data['authCode']) ? $process_data['authCode'] : null,
-                    'psp_reference' => isset($process_data['pspReference']) ? $process_data['pspReference'] : null,
+                    'auth_code' => isset($process_response['authCode']) ? $process_response['authCode'] : null,
+                    'psp_reference' => isset($process_response['pspReference']) ? $process_response['pspReference'] : null,
                     'amount' => number_format($order_amount/100, 2) . ' HKD'
                 ]
             ]);
             break;
             
         case 'Refused':
-            $reason = isset($process_data['refusalReason']) ? $process_data['refusalReason'] : 'Rechazado';
+            $reason = isset($process_response['refusalReason']) ? $process_response['refusalReason'] : 'Rechazado';
             echo json_encode([
                 'status' => 'rejected',
                 'message' => $reason,
@@ -317,7 +317,7 @@ if (isset($process_data['resultCode'])) {
             
         case 'Error':
         case 'Cancelled':
-            $reason = isset($process_data['refusalReason']) ? $process_data['refusalReason'] : $process_data['resultCode'];
+            $reason = isset($process_response['refusalReason']) ? $process_response['refusalReason'] : $process_response['resultCode'];
             echo json_encode([
                 'status' => 'error',
                 'message' => $reason,
@@ -336,19 +336,19 @@ if (isset($process_data['resultCode'])) {
         default:
             echo json_encode([
                 'status' => 'unknown',
-                'message' => 'Respuesta desconocida: ' . $process_data['resultCode'],
+                'message' => 'Respuesta desconocida: ' . $process_response['resultCode'],
                 'html' => '<span class="badge badge-warning">⚠️ REVISAR</span> ➔ ' .
                          '<span class="badge badge-warning">' . $cc . '|' . $mes . '|' . $ano . '|' . $cvv . '</span> ➔ ' .
                          '<span class="badge badge-info">' . $tipo . '</span> ➔ ' .
-                         '<span class="badge badge-warning">' . $process_data['resultCode'] . '</span>',
+                         '<span class="badge badge-warning">' . $process_response['resultCode'] . '</span>',
                 'data' => [
                     'card_last4' => substr($cc, -4),
-                    'result_code' => $process_data['resultCode'],
-                    'full_response' => $process_data
+                    'result_code' => $process_response['resultCode'],
+                    'full_response' => $process_response
                 ]
             ]);
     }
-} elseif (isset($process_data['action'])) {
+} elseif (isset($process_response['action'])) {
     // 3D Secure requerido
     echo json_encode([
         'status' => '3d_secure',
@@ -359,8 +359,8 @@ if (isset($process_data['resultCode'])) {
                  '<span class="badge badge-warning">3D Secure requerido</span>',
         'data' => [
             'card_last4' => substr($cc, -4),
-            'action_url' => isset($process_data['action']['url']) ? $process_data['action']['url'] : null,
-            'action_method' => isset($process_data['action']['method']) ? $process_data['action']['method'] : null,
+            'action_url' => isset($process_response['action']['url']) ? $process_response['action']['url'] : null,
+            'action_method' => isset($process_response['action']['method']) ? $process_response['action']['method'] : null,
             'order_number' => $order_number
         ]
     ]);
@@ -374,7 +374,7 @@ if (isset($process_data['resultCode'])) {
                  '<span class="badge badge-warning">Respuesta inesperada</span>',
         'data' => [
             'card_last4' => substr($cc, -4),
-            'raw_response' => $process_data
+            'raw_response' => $process_response
         ]
     ]);
 }
